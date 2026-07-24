@@ -1,6 +1,7 @@
 ﻿using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FleetMaintenance.API.Controllers;
@@ -10,10 +11,17 @@ namespace FleetMaintenance.API.Controllers;
 public class VehiclesController : ControllerBase
 {
     private readonly IVehicleService _vehicleService;
+    private readonly IValidator<CreateVehicleDto> _createValidator;
+    private readonly IValidator<UpdateVehicleDto> _updateValidator;
 
-    public VehiclesController(IVehicleService vehicleService)
+    public VehiclesController(
+        IVehicleService vehicleService,
+        IValidator<CreateVehicleDto> createValidator,
+        IValidator<UpdateVehicleDto> updateValidator)
     {
         _vehicleService = vehicleService;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet("vehicles")]
@@ -46,6 +54,25 @@ public class VehiclesController : ControllerBase
     public async Task<ActionResult<ApiResponse<VehicleDto>>> Create(
         CreateVehicleDto dto)
     {
+        var validationResult =
+    await _createValidator.ValidateAsync(dto);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed.",
+                Data = validationResult.Errors
+                    .GroupBy(error => error.PropertyName)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group
+                            .Select(error => error.ErrorMessage)
+                            .ToArray())
+            });
+        }
+
         var vehicle = await _vehicleService.CreateAsync(dto);
 
         var response = new ApiResponse<VehicleDto>
@@ -66,6 +93,25 @@ public class VehiclesController : ControllerBase
         int id,
         UpdateVehicleDto dto)
     {
+        var validationResult =
+    await _updateValidator.ValidateAsync(dto);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Validation failed.",
+                Data = validationResult.Errors
+                    .GroupBy(error => error.PropertyName)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group
+                            .Select(error => error.ErrorMessage)
+                            .ToArray())
+            });
+        }
+
         var vehicle = await _vehicleService.UpdateAsync(id, dto);
 
         return Ok(new ApiResponse<VehicleDto>

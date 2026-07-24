@@ -2,8 +2,10 @@ using FleetMaintenance.API.Middleware;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
 using FleetMaintenance.Application.Services;
+using FleetMaintenance.Application.Validators.Vehicles;
 using FleetMaintenance.Infrastructure.Data;
 using FleetMaintenance.Infrastructure.Repositories;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -31,6 +33,9 @@ builder.Services.AddControllers()
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddValidatorsFromAssemblyContaining<
+    CreateVehicleDtoValidator>();
 
 var app = builder.Build();
 
