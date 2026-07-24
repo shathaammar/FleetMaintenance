@@ -22,5 +22,7 @@ namespace FleetMaintenance.Domain.Entities
         public VehicleStatus Status { get; set; } = VehicleStatus.Active;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
     }
 }
