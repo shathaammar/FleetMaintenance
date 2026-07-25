@@ -1,7 +1,7 @@
-﻿using FleetMaintenance.Application.Common.Models;
+﻿using FluentValidation;
+using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Services;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FleetMaintenance.API.Controllers;
@@ -24,8 +24,9 @@ public class VehiclesController : ControllerBase
         _updateValidator = updateValidator;
     }
 
-    [HttpGet("vehicles")]
-    public async Task<ActionResult<ApiResponse<List<VehicleDto>>>> GetAll()
+    [HttpGet]
+    public async Task<
+        ActionResult<ApiResponse<List<VehicleDto>>>> GetAll()
     {
         var vehicles = await _vehicleService.GetAllAsync();
 
@@ -37,8 +38,9 @@ public class VehiclesController : ControllerBase
         });
     }
 
-    [HttpGet("vehicles/{id:int}")]
-    public async Task<ActionResult<ApiResponse<VehicleDto>>> GetById(int id)
+    [HttpGet("{id:int}")]
+    public async Task<
+        ActionResult<ApiResponse<VehicleDto>>> GetById(int id)
     {
         var vehicle = await _vehicleService.GetByIdAsync(id);
 
@@ -50,27 +52,18 @@ public class VehiclesController : ControllerBase
         });
     }
 
-    [HttpPost("create")]
-    public async Task<ActionResult<ApiResponse<VehicleDto>>> Create(
+    [HttpPost]
+    public async Task<
+        ActionResult<ApiResponse<VehicleDto>>> Create(
         CreateVehicleDto dto)
     {
         var validationResult =
-    await _createValidator.ValidateAsync(dto);
+            await _createValidator.ValidateAsync(dto);
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Validation failed.",
-                Data = validationResult.Errors
-                    .GroupBy(error => error.PropertyName)
-                    .ToDictionary(
-                        group => group.Key,
-                        group => group
-                            .Select(error => error.ErrorMessage)
-                            .ToArray())
-            });
+            return BadRequest(
+                CreateValidationResponse(validationResult));
         }
 
         var vehicle = await _vehicleService.CreateAsync(dto);
@@ -88,28 +81,19 @@ public class VehiclesController : ControllerBase
             response);
     }
 
-    [HttpPatch("update/{id:int}")]
-    public async Task<ActionResult<ApiResponse<VehicleDto>>> Update(
+    [HttpPatch("{id:int}")]
+    public async Task<
+        ActionResult<ApiResponse<VehicleDto>>> Update(
         int id,
         UpdateVehicleDto dto)
     {
         var validationResult =
-    await _updateValidator.ValidateAsync(dto);
+            await _updateValidator.ValidateAsync(dto);
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Validation failed.",
-                Data = validationResult.Errors
-                    .GroupBy(error => error.PropertyName)
-                    .ToDictionary(
-                        group => group.Key,
-                        group => group
-                            .Select(error => error.ErrorMessage)
-                            .ToArray())
-            });
+            return BadRequest(
+                CreateValidationResponse(validationResult));
         }
 
         var vehicle = await _vehicleService.UpdateAsync(id, dto);
@@ -122,8 +106,9 @@ public class VehiclesController : ControllerBase
         });
     }
 
-    [HttpDelete("delete/{id:int}")]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
+    [HttpDelete("{id:int}")]
+    public async Task<
+        ActionResult<ApiResponse<object>>> Delete(int id)
     {
         await _vehicleService.DeleteAsync(id);
 
@@ -133,5 +118,24 @@ public class VehiclesController : ControllerBase
             Message = "Vehicle deleted successfully.",
             Data = null
         });
+    }
+
+    private static ApiResponse<object> CreateValidationResponse(
+        FluentValidation.Results.ValidationResult validationResult)
+    {
+        var errors = validationResult.Errors
+            .GroupBy(error => error.PropertyName)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(error => error.ErrorMessage)
+                    .ToArray());
+
+        return new ApiResponse<object>
+        {
+            Success = false,
+            Message = "Validation failed.",
+            Data = errors
+        };
     }
 }

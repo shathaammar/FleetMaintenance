@@ -1,10 +1,13 @@
 using FleetMaintenance.API.Middleware;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
+using FleetMaintenance.Application.Interfaces.UnitOfWork;
 using FleetMaintenance.Application.Services;
+using FleetMaintenance.Application.Validators.MaintenanceTypes;
 using FleetMaintenance.Application.Validators.Vehicles;
 using FleetMaintenance.Infrastructure.Data;
 using FleetMaintenance.Infrastructure.Repositories;
+using FleetMaintenance.Infrastructure.UnitOfWork;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -19,8 +22,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 // Dependency Injection
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IMaintenanceTypeRepository, MaintenanceTypeRepository>();
+builder.Services.AddScoped<IMaintenanceTypeService, MaintenanceTypeService>();
 
 // Controllers
 builder.Services.AddControllers()
@@ -36,6 +43,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddValidatorsFromAssemblyContaining<
     CreateVehicleDtoValidator>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<
+    CreateMaintenanceTypeDtoValidator>();
 
 var app = builder.Build();
 

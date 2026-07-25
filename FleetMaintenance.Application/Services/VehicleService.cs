@@ -2,6 +2,7 @@
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
+using FleetMaintenance.Application.Interfaces.UnitOfWork;
 using FleetMaintenance.Domain.Entities;
 using FleetMaintenance.Domain.Enums;
 
@@ -10,15 +11,21 @@ namespace FleetMaintenance.Application.Services;
 public class VehicleService : IVehicleService
 {
     private readonly IVehicleRepository _vehicleRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IGenericRepository<Vehicle> _genericRepository;
 
-    public VehicleService(IVehicleRepository vehicleRepository)
+    public VehicleService(IVehicleRepository vehicleRepository,
+        IUnitOfWork unitOfWork,
+        IGenericRepository<Vehicle> genericRepository)
     {
         _vehicleRepository = vehicleRepository;
+        _unitOfWork = unitOfWork;
+        _genericRepository = genericRepository;
     }
 
     public async Task<List<VehicleDto>> GetAllAsync()
     {
-        var vehicles = await _vehicleRepository.GetAllAsync();
+        var vehicles = await _genericRepository.GetAllAsync();
 
         return vehicles
             .Select(MapToDto)
@@ -27,7 +34,7 @@ public class VehicleService : IVehicleService
 
     public async Task<VehicleDto> GetByIdAsync(int id)
     {
-        var vehicle = await _vehicleRepository.GetByIdAsync(id);
+        var vehicle = await _genericRepository.GetByIdAsync(id);
 
         if (vehicle is null)
         {
@@ -62,15 +69,15 @@ public class VehicleService : IVehicleService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _vehicleRepository.AddAsync(vehicle);
-        await _vehicleRepository.SaveChangesAsync();
+        await _genericRepository.AddAsync(vehicle);
+        await _unitOfWork.SaveChangesAsync();
 
         return MapToDto(vehicle);
     }
 
     public async Task<VehicleDto> UpdateAsync(int id, UpdateVehicleDto dto)
     {
-        var vehicle = await _vehicleRepository.GetByIdAsync(id);
+        var vehicle = await _genericRepository.GetByIdAsync(id);
 
         if (vehicle is null)
         {
@@ -122,15 +129,15 @@ public class VehicleService : IVehicleService
             vehicle.Status = dto.Status.Value;
         }
 
-        _vehicleRepository.Update(vehicle);
-        await _vehicleRepository.SaveChangesAsync();
+        await _genericRepository.UpdateAsync(vehicle);
+        await _unitOfWork.SaveChangesAsync();
 
         return MapToDto(vehicle);
     }
 
     public async Task DeleteAsync(int id)
     {
-        var vehicle = await _vehicleRepository.GetByIdAsync(id);
+        var vehicle = await _genericRepository.GetByIdAsync(id);
 
         if (vehicle is null)
         {
@@ -138,8 +145,8 @@ public class VehicleService : IVehicleService
                 $"Vehicle with ID {id} was not found.");
         }
 
-        _vehicleRepository.Delete(vehicle);
-        await _vehicleRepository.SaveChangesAsync();
+        await _genericRepository.DeleteAsync(vehicle);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private static VehicleDto MapToDto(Vehicle vehicle)
