@@ -13,24 +13,34 @@ public class VehiclesController : ControllerBase
     private readonly IVehicleService _vehicleService;
     private readonly IValidator<CreateVehicleDto> _createValidator;
     private readonly IValidator<UpdateVehicleDto> _updateValidator;
+    private readonly IValidator<VehicleFilterDto> _filterValidator;
 
     public VehiclesController(
         IVehicleService vehicleService,
         IValidator<CreateVehicleDto> createValidator,
-        IValidator<UpdateVehicleDto> updateValidator)
+        IValidator<UpdateVehicleDto> updateValidator,
+        IValidator<VehicleFilterDto> filterValidator)
     {
         _vehicleService = vehicleService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _filterValidator = filterValidator;
     }
 
     [HttpGet]
-    public async Task<
-        ActionResult<ApiResponse<List<VehicleDto>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<PagedResult<VehicleDto>>>> GetAll([FromQuery] VehicleFilterDto filter)
     {
-        var vehicles = await _vehicleService.GetAllAsync();
+        var validationResult = await _filterValidator.ValidateAsync(filter);
 
-        return Ok(new ApiResponse<List<VehicleDto>>
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(
+                CreateValidationResponse(validationResult));
+        }
+
+        var vehicles = await _vehicleService.GetPagedAsync(filter);
+
+        return Ok(new ApiResponse<PagedResult<VehicleDto>>
         {
             Success = true,
             Message = "Vehicles retrieved successfully.",

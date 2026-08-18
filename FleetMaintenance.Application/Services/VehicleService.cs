@@ -1,4 +1,5 @@
 ﻿using FleetMaintenance.Application.Common.Exceptions;
+using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
@@ -30,6 +31,22 @@ public class VehicleService : IVehicleService
         return vehicles
             .Select(MapToDto)
             .ToList();
+    }
+    public async Task<PagedResult<VehicleDto>> GetPagedAsync(VehicleFilterDto filter)
+    {
+        var result =
+            await _vehicleRepository.GetPagedAsync(filter);
+
+        return new PagedResult<VehicleDto>
+        {
+            Items = result.Items
+                .Select(MapToDto)
+                .ToList(),
+
+            PageNumber = result.PageNumber,
+            PageSize = result.PageSize,
+            TotalCount = result.TotalCount
+        };
     }
 
     public async Task<VehicleDto> GetByIdAsync(int id)
