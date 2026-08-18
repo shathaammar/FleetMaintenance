@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FleetMaintenance.Infrastructure.Repositories;
 
-public class MaintenanceTypeRepository
-    : GenericRepository<MaintenanceType>,
-      IMaintenanceTypeRepository
+public class MaintenanceTypeRepository: GenericRepository<MaintenanceType>, IMaintenanceTypeRepository
 {
     public MaintenanceTypeRepository(ApplicationDbContext context)
         : base(context)

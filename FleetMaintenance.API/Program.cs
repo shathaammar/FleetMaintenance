@@ -28,11 +28,12 @@ builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IMaintenanceTypeRepository, MaintenanceTypeRepository>();
 builder.Services.AddScoped<IMaintenanceTypeService, MaintenanceTypeService>();
+builder.Services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordRepository>();
 
-// Controllers
+// Cotrollers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
-    {
+    { 
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter());
     });

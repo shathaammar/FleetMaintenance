@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FleetMaintenance.Infrastructure.Repositories;
 
-public class VehicleRepository
-    : GenericRepository<Vehicle>, IVehicleRepository
+public class VehicleRepository: GenericRepository<Vehicle>, IVehicleRepository
 {
     public VehicleRepository(ApplicationDbContext context)
         : base(context)
