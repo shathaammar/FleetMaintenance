@@ -2,7 +2,7 @@
 
 namespace FleetMaintenance.Application.Interfaces.Repositories
 {
-    public interface IVehicleRepository
+    public interface IVehicleRepository : IGenericRepository<Vehicle>
     {
         Task<bool> PlateNumberExistsAsync(string plateNumber, int? excludedVehicleId = null);
     }

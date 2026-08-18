@@ -29,6 +29,7 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IMaintenanceTypeRepository, MaintenanceTypeRepository>();
 builder.Services.AddScoped<IMaintenanceTypeService, MaintenanceTypeService>();
 builder.Services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordRepository>();
+builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
 
 // Cotrollers
 builder.Services.AddControllers()
