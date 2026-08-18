@@ -12,39 +12,46 @@ namespace FleetMaintenance.API.Controllers;
 public class MaintenanceRecordsController : ControllerBase
 {
     private readonly IMaintenanceRecordService _service;
-
-    private readonly IValidator<CreateMaintenanceRecordDto>
-        _createValidator;
-
-    private readonly IValidator<UpdateMaintenanceRecordDto>
-        _updateValidator;
-
-    private readonly IValidator<CompleteMaintenanceRecordDto>
-        _completeValidator;
+    private readonly IValidator<CreateMaintenanceRecordDto> _createValidator;
+    private readonly IValidator<UpdateMaintenanceRecordDto> _updateValidator;
+    private readonly IValidator<CompleteMaintenanceRecordDto> _completeValidator;
+    private readonly IValidator<MaintenanceRecordFilterDto> _filterValidator;
 
     public MaintenanceRecordsController(
         IMaintenanceRecordService service,
         IValidator<CreateMaintenanceRecordDto> createValidator,
         IValidator<UpdateMaintenanceRecordDto> updateValidator,
-        IValidator<CompleteMaintenanceRecordDto> completeValidator)
+        IValidator<CompleteMaintenanceRecordDto> completeValidator,
+        IValidator<MaintenanceRecordFilterDto> filterValidator)
     {
         _service = service;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
         _completeValidator = completeValidator;
+        _filterValidator = filterValidator;
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<List<MaintenanceRecordDto>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<PagedResult<MaintenanceRecordDto>>>> GetAll([FromQuery] MaintenanceRecordFilterDto filter)
     {
-        var records = await _service.GetAllAsync();
+        var validationResult = await _filterValidator.ValidateAsync(filter);
 
-        return Ok(new ApiResponse<List<MaintenanceRecordDto>>
+        if (!validationResult.IsValid)
         {
-            Success = true,
-            Message = "Maintenance records retrieved successfully.",
-            Data = records
-        });
+            return BadRequest(
+                CreateValidationResponse(validationResult));
+        }
+
+        var records = await _service.GetPagedAsync(filter);
+
+        return Ok(
+            new ApiResponse<PagedResult<MaintenanceRecordDto>>
+            {
+                Success = true,
+                Message =
+                    "Maintenance records retrieved successfully.",
+                Data = records
+            });
     }
 
     [HttpGet("{id:int}")]

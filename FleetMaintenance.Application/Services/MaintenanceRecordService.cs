@@ -1,4 +1,5 @@
 ﻿using FleetMaintenance.Application.Common.Exceptions;
+using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.MaintenanceRecords;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
@@ -33,6 +34,23 @@ public class MaintenanceRecordService
         var records = await _recordRepository.GetAllWithDetailsAsync();
 
         return records.Select(MapToDto).ToList();
+    }
+
+    public async Task<PagedResult<MaintenanceRecordDto>> GetPagedAsync(MaintenanceRecordFilterDto filter)
+    {
+        var result =
+            await _recordRepository.GetPagedAsync(filter);
+
+        return new PagedResult<MaintenanceRecordDto>
+        {
+            Items = result.Items
+                .Select(MapToDto)
+                .ToList(),
+
+            PageNumber = result.PageNumber,
+            PageSize = result.PageSize,
+            TotalCount = result.TotalCount
+        };
     }
 
     public async Task<MaintenanceRecordDto> GetByIdAsync(int id)

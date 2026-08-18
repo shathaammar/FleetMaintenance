@@ -1,10 +1,12 @@
-﻿using FleetMaintenance.Application.DTOs.MaintenanceRecords;
+﻿using FleetMaintenance.Application.Common.Models;
+using FleetMaintenance.Application.DTOs.MaintenanceRecords;
 
 namespace FleetMaintenance.Application.Interfaces.Services;
 
 public interface IMaintenanceRecordService
 {
     Task<List<MaintenanceRecordDto>> GetAllAsync();
+    Task<PagedResult<MaintenanceRecordDto>> GetPagedAsync(MaintenanceRecordFilterDto filter);
 
     Task<MaintenanceRecordDto> GetByIdAsync(int id);
 
