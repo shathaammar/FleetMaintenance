@@ -1,4 +1,5 @@
 using FleetMaintenance.API.Middleware;
+using FleetMaintenance.Application.Common.Settings;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
 using FleetMaintenance.Application.Interfaces.UnitOfWork;
@@ -6,10 +7,15 @@ using FleetMaintenance.Application.Services;
 using FleetMaintenance.Application.Validators.MaintenanceTypes;
 using FleetMaintenance.Application.Validators.Vehicles;
 using FleetMaintenance.Infrastructure.Data;
+using FleetMaintenance.Infrastructure.Identity;
 using FleetMaintenance.Infrastructure.Repositories;
 using FleetMaintenance.Infrastructure.UnitOfWork;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +26,62 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services
+    .AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+
+        options.Password.RequiredLength = 8;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireDigit = true;
+        options.Password.RequireNonAlphanumeric = false;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection(
+        JwtSettings.SectionName));
+
+string jwtKey =
+    builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "JWT secret key is not configured.");
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+
+        options.DefaultChallengeScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer =
+                    builder.Configuration["Jwt:Issuer"],
+
+                ValidAudience =
+                    builder.Configuration["Jwt:Audience"],
+
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtKey)),
+
+                ClockSkew = TimeSpan.Zero
+            };
+    });
 
 // Dependency Injection
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -32,6 +94,8 @@ builder.Services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordReposi
 builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Cotrollers
 builder.Services.AddControllers()
@@ -63,6 +127,8 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
