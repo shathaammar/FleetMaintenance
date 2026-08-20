@@ -111,15 +111,12 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         {
             VehicleId = dto.VehicleId,
             MaintenanceTypeId = dto.MaintenanceTypeId,
-
             RequestedByUserId = userId,
-
+            RequestedByFullName = _currentUserService.FullName,
+            RequestedByEmail = _currentUserService.Email,
             Description = dto.Description.Trim(),
-
             PreferredDate = dto.PreferredDate?.Date,
-
             Status = MaintenanceRequestStatus.Pending,
-
             RequestedAt = DateTime.UtcNow
         };
 
@@ -250,6 +247,8 @@ public class MaintenanceRequestService: IMaintenanceRequestService
             MaintenanceTypeId = request.MaintenanceTypeId,
             MaintenanceTypeName = request.MaintenanceType.Name,
             RequestedByUserId = request.RequestedByUserId,
+            RequestedByFullName = request.RequestedByFullName,
+            RequestedByEmail = request.RequestedByEmail,
             Description = request.Description,
             PreferredDate = request.PreferredDate,
             Status = request.Status,

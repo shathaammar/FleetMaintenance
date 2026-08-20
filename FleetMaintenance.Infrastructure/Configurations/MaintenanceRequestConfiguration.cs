@@ -35,6 +35,14 @@ public class MaintenanceRequestConfiguration
 
         builder.HasIndex(request => request.RequestedByUserId);
 
+        builder.Property(request => request.RequestedByFullName)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(request => request.RequestedByEmail)
+            .IsRequired()
+            .HasMaxLength(256);
+
         builder.HasIndex(request => request.Status);
 
         builder.HasIndex(request => request.RequestedAt);

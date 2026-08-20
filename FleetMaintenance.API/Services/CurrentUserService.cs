@@ -14,24 +14,29 @@ public class CurrentUserService : ICurrentUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public string UserId
+    public string UserId =>
+        GetRequiredClaim(ClaimTypes.NameIdentifier);
+
+    public string FullName =>
+        GetRequiredClaim(ClaimTypes.Name);
+
+    public string Email =>
+        GetRequiredClaim(ClaimTypes.Email);
+
+    private string GetRequiredClaim(string claimType)
     {
-        get
+        string? value =
+            _httpContextAccessor
+                .HttpContext?
+                .User
+                .FindFirstValue(claimType);
+
+        if (string.IsNullOrWhiteSpace(value))
         {
-            string? userId =
-                _httpContextAccessor
-                    .HttpContext?
-                    .User
-                    .FindFirstValue(
-                        ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                throw new UnauthorizedException(
-                    "The current user could not be identified.");
-            }
-
-            return userId;
+            throw new UnauthorizedException(
+                "The current user could not be identified.");
         }
+
+        return value;
     }
 }

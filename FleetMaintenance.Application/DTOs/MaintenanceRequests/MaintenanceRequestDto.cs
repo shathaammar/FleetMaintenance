@@ -16,6 +16,10 @@ public class MaintenanceRequestDto
 
     public string RequestedByUserId { get; set; } = string.Empty;
 
+    public string RequestedByFullName { get; set; } = string.Empty;
+
+    public string RequestedByEmail { get; set; } = string.Empty;
+
     public string Description { get; set; } = string.Empty;
 
     public DateTime? PreferredDate { get; set; }
