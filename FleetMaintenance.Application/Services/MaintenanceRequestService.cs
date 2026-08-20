@@ -1,4 +1,5 @@
 ﻿using FleetMaintenance.Application.Common.Exceptions;
+using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.MaintenanceRequests;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
@@ -33,26 +34,6 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         _currentUserService = currentUserService;
     }
 
-    public async Task<List<MaintenanceRequestDto>> GetAllAsync()
-    {
-        var requests = await _maintenanceRequestRepository.GetAllWithDetailsAsync();
-
-        return requests
-            .Select(MapToDto)
-            .ToList();
-    }
-
-    public async Task<List<MaintenanceRequestDto>> GetMyRequestsAsync()
-    {
-        string userId = _currentUserService.UserId;
-
-        var requests = await _maintenanceRequestRepository.GetByUserIdWithDetailsAsync(userId);
-
-        return requests
-            .Select(MapToDto)
-            .ToList();
-    }
-
     public async Task<MaintenanceRequestDto> GetByIdAsync(int id)
     {
         var request = await _maintenanceRequestRepository.GetByIdWithDetailsAsync(id);
@@ -79,6 +60,22 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         }
 
         return MapToDto(request);
+    }
+
+    public async Task<PagedResult<MaintenanceRequestDto>> GetPagedAsync(MaintenanceRequestFilterDto filter)
+    {
+        PagedResult<MaintenanceRequest> result = await _maintenanceRequestRepository.GetPagedAsync(filter);
+
+        return MapPagedResult(result);
+    }
+
+    public async Task<PagedResult<MaintenanceRequestDto>> GetMyRequestsPagedAsync(MaintenanceRequestFilterDto filter)
+    {
+        string userId = _currentUserService.UserId;
+
+        PagedResult<MaintenanceRequest> result = await _maintenanceRequestRepository.GetPagedByUserIdAsync(filter, userId);
+
+        return MapPagedResult(result);
     }
 
     public async Task<MaintenanceRequestDto> CreateAsync(CreateMaintenanceRequestDto dto)
@@ -223,6 +220,24 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         await _unitOfWork.SaveChangesAsync();
 
         return await GetByIdAsync(request.Id);
+    }
+
+
+    // Helper Methods
+    private static PagedResult<MaintenanceRequestDto> MapPagedResult(PagedResult<MaintenanceRequest> result)
+    {
+        return new PagedResult<MaintenanceRequestDto>
+        {
+            Items = result.Items
+                .Select(MapToDto)
+                .ToList(),
+
+            PageNumber = result.PageNumber,
+
+            PageSize = result.PageSize,
+
+            TotalCount = result.TotalCount
+        };
     }
 
     private static MaintenanceRequestDto MapToDto(MaintenanceRequest request)

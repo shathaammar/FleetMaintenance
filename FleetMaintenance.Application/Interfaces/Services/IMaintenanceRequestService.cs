@@ -1,16 +1,17 @@
-﻿using FleetMaintenance.Application.DTOs.MaintenanceRequests;
+﻿using FleetMaintenance.Application.Common.Models;
+using FleetMaintenance.Application.DTOs.MaintenanceRequests;
 
 namespace FleetMaintenance.Application.Interfaces.Services;
 
 public interface IMaintenanceRequestService
 {
-    Task<List<MaintenanceRequestDto>> GetAllAsync();
-
-    Task<List<MaintenanceRequestDto>> GetMyRequestsAsync();
-
     Task<MaintenanceRequestDto> GetByIdAsync(int id);
 
     Task<MaintenanceRequestDto> GetMyRequestByIdAsync(int id);
+
+    Task<PagedResult<MaintenanceRequestDto>> GetPagedAsync(MaintenanceRequestFilterDto filter);
+
+    Task<PagedResult<MaintenanceRequestDto>> GetMyRequestsPagedAsync(MaintenanceRequestFilterDto filter);
 
     Task<MaintenanceRequestDto> CreateAsync(CreateMaintenanceRequestDto dto);
 

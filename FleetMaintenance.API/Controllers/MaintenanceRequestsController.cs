@@ -18,32 +18,42 @@ public class MaintenanceRequestsController : ControllerBase
     private readonly IValidator<CreateMaintenanceRequestDto> _createValidator;
     private readonly IValidator<ApproveMaintenanceRequestDto> _approveValidator;
     private readonly IValidator<RejectMaintenanceRequestDto> _rejectValidator;
+    private readonly IValidator<MaintenanceRequestFilterDto> _filterValidator;
 
     public MaintenanceRequestsController(
         IMaintenanceRequestService maintenanceRequestService,
         IValidator<CreateMaintenanceRequestDto> createValidator,
         IValidator<ApproveMaintenanceRequestDto> approveValidator,
-        IValidator<RejectMaintenanceRequestDto> rejectValidator)
+        IValidator<RejectMaintenanceRequestDto> rejectValidator,
+        IValidator<MaintenanceRequestFilterDto> filterValidator)
     {
         _maintenanceRequestService = maintenanceRequestService;
         _createValidator = createValidator;
         _approveValidator = approveValidator;
         _rejectValidator = rejectValidator;
+        _filterValidator = filterValidator;
     }
 
     [Authorize(Roles = AppRoles.Admin)]
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<List<MaintenanceRequestDto>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<PagedResult<MaintenanceRequestDto>>>> GetAll([FromQuery] MaintenanceRequestFilterDto filter)
     {
-        var requests = await _maintenanceRequestService.GetAllAsync();
+        ValidationResult validationResult = await _filterValidator.ValidateAsync(filter);
+
+        if (!validationResult.IsValid)
+        {
+            return CreateValidationResponse(validationResult);
+        }
+
+        var result = await _maintenanceRequestService.GetPagedAsync(filter);
 
         return Ok(
-            new ApiResponse<List<MaintenanceRequestDto>>
+            new ApiResponse<PagedResult<MaintenanceRequestDto>>
             {
                 Success = true,
                 Message =
                     "Maintenance requests retrieved successfully.",
-                Data = requests
+                Data = result
             });
     }
 
@@ -65,17 +75,23 @@ public class MaintenanceRequestsController : ControllerBase
 
     [Authorize(Roles = AppRoles.User)]
     [HttpGet("my")]
-    public async Task<ActionResult<ApiResponse<List<MaintenanceRequestDto>>>> GetMyRequests()
+    public async Task<ActionResult<ApiResponse<PagedResult<MaintenanceRequestDto>>>> GetMyRequests([FromQuery] MaintenanceRequestFilterDto filter)
     {
-        var requests = await _maintenanceRequestService.GetMyRequestsAsync();
+        ValidationResult validationResult = await _filterValidator.ValidateAsync(filter);
+
+        if (!validationResult.IsValid)
+        {
+            return CreateValidationResponse(validationResult);
+        }
+
+        var result = await _maintenanceRequestService.GetMyRequestsPagedAsync(filter);
 
         return Ok(
-            new ApiResponse<List<MaintenanceRequestDto>>
+            new ApiResponse<PagedResult<MaintenanceRequestDto>>
             {
                 Success = true,
-                Message =
-                    "Your maintenance requests were retrieved successfully.",
-                Data = requests
+                Message = "Your maintenance requests were retrieved successfully.",
+                Data = result
             });
     }
 
