@@ -18,6 +18,7 @@ namespace FleetMaintenance.Infrastructure.Data
         public DbSet<MaintenanceType> MaintenanceTypes { get; set; }
 
         public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
+        public DbSet<MaintenanceRequest> MaintenanceRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

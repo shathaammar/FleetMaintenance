@@ -8,7 +8,8 @@
 
         public string? Description { get; set; }
 
-        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; }
-            = new List<MaintenanceRecord>();
+        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
+
+        public ICollection<MaintenanceRequest> MaintenanceRequests { get; set; } = new List<MaintenanceRequest>();
     }
 }
