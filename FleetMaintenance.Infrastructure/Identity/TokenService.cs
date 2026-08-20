@@ -22,7 +22,8 @@ public class TokenService : ITokenService
     public TokenResultDto GenerateToken(
         string userId,
         string fullName,
-        string email)
+        string email,
+        IReadOnlyCollection<string> roles)
     {
         if (string.IsNullOrWhiteSpace(_jwtSettings.Key))
         {
@@ -30,7 +31,9 @@ public class TokenService : ITokenService
                 "JWT secret key is not configured.");
         }
 
-        DateTime expiresAt = DateTime.UtcNow.AddMinutes(
+        DateTime now = DateTime.UtcNow;
+
+        DateTime expiresAt = now.AddMinutes(
             _jwtSettings.ExpiryMinutes);
 
         var claims = new List<Claim>
@@ -60,6 +63,13 @@ public class TokenService : ITokenService
                 Guid.NewGuid().ToString())
         };
 
+        foreach (string role in roles)
+        {
+            claims.Add(new Claim(
+                ClaimTypes.Role,
+                role));
+        }
+
         var securityKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_jwtSettings.Key));
 
@@ -68,8 +78,8 @@ public class TokenService : ITokenService
             Subject = new ClaimsIdentity(claims),
             Issuer = _jwtSettings.Issuer,
             Audience = _jwtSettings.Audience,
-            IssuedAt = DateTime.UtcNow,
-            NotBefore = DateTime.UtcNow,
+            IssuedAt = now,
+            NotBefore = now,
             Expires = expiresAt,
             SigningCredentials = new SigningCredentials(
                 securityKey,
@@ -78,7 +88,8 @@ public class TokenService : ITokenService
 
         var tokenHandler = new JsonWebTokenHandler();
 
-        string token = tokenHandler.CreateToken(descriptor);
+        string token =
+            tokenHandler.CreateToken(descriptor);
 
         return new TokenResultDto
         {

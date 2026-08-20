@@ -40,7 +40,9 @@ builder.Services
         options.Password.RequireDigit = true;
         options.Password.RequireNonAlphanumeric = false;
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
     .AddDefaultTokenProviders();
 
 builder.Services.Configure<JwtSettings>(
@@ -166,6 +168,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 
 // Swagger is available during development only
 if (app.Environment.IsDevelopment())

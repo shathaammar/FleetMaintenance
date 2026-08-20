@@ -1,7 +1,9 @@
-﻿using FluentValidation;
+﻿using FleetMaintenance.Application.Common.Authorization;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.MaintenanceTypes;
 using FleetMaintenance.Application.Interfaces.Services;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FleetMaintenance.API.Controllers;
@@ -52,6 +54,7 @@ public class MaintenanceTypesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<
         ActionResult<ApiResponse<MaintenanceTypeDto>>> Create(
@@ -80,6 +83,7 @@ public class MaintenanceTypesController : ControllerBase
             response);
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPatch("{id:int}")]
     public async Task<
         ActionResult<ApiResponse<MaintenanceTypeDto>>> Update(
@@ -104,6 +108,7 @@ public class MaintenanceTypesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
     {

@@ -3,6 +3,8 @@ using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
+using FleetMaintenance.Application.Common.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FleetMaintenance.API.Controllers;
 
@@ -62,6 +64,7 @@ public class VehiclesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<
         ActionResult<ApiResponse<VehicleDto>>> Create(
@@ -91,6 +94,7 @@ public class VehiclesController : ControllerBase
             response);
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPatch("{id:int}")]
     public async Task<
         ActionResult<ApiResponse<VehicleDto>>> Update(
@@ -116,6 +120,7 @@ public class VehiclesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<
         ActionResult<ApiResponse<object>>> Delete(int id)

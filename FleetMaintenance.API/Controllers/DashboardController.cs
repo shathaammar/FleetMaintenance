@@ -1,10 +1,13 @@
-﻿using FleetMaintenance.Application.Common.Models;
+﻿using FleetMaintenance.Application.Common.Authorization;
+using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Dashboard;
 using FleetMaintenance.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FleetMaintenance.API.Controllers;
 
+[Authorize(Roles = AppRoles.Admin)]
 [ApiController]
 [Route("api/dashboard")]
 public class DashboardController : ControllerBase

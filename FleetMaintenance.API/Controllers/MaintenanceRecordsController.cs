@@ -1,12 +1,15 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
+﻿using FleetMaintenance.Application.Common.Authorization;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.MaintenanceRecords;
 using FleetMaintenance.Application.Interfaces.Services;
+using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FleetMaintenance.API.Controllers;
 
+[Authorize(Roles = AppRoles.Admin)]
 [ApiController]
 [Route("api/maintenance-records")]
 public class MaintenanceRecordsController : ControllerBase
