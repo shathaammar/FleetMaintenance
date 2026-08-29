@@ -12,11 +12,14 @@ import {
   Wrench,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 import { ROUTES } from "../../constants/routes";
 
 import FleetNoveLogo from "../../assets/FleetNove-Logo.png";
+
+import toast from "react-hot-toast";
+import { useAuth } from "../../hooks/useAuth";
 
 type UserRole = "Admin" | "User";
 
@@ -88,6 +91,29 @@ export function DashboardSidebar({
   isCollapsed,
   onToggle,
 }: DashboardSidebarProps) {
+
+  const navigate = useNavigate();
+
+  const {
+    user,
+    logout,
+  } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+
+    toast.success(
+      "You have been logged out successfully.",
+    );
+
+    navigate(
+      ROUTES.LOGIN,
+      {
+        replace: true,
+      },
+    );
+  };
+
   const items =
     role === "Admin" ? adminItems : userItems;
 
@@ -259,18 +285,17 @@ export function DashboardSidebar({
             <>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-text-main">
-                  {role === "Admin"
-                    ? "Fleet Administrator"
-                    : "Fleet User"}
+                  {user?.fullName ?? "FleetNova User"}
                 </p>
 
                 <p className="truncate text-xs text-text-muted">
-                  {role}
+                  {user?.email ?? role}
                 </p>
               </div>
 
               <button
                 type="button"
+                onClick={handleLogout}
                 className="grid size-9 place-items-center rounded-xl text-text-muted transition hover:bg-danger/10 hover:text-danger"
                 aria-label="Log out"
               >

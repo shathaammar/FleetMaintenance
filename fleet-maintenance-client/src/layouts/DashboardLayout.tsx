@@ -10,8 +10,8 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import { DashboardSidebar } from
-  "../components/dashboard/DashboardSidebar";
+import { DashboardSidebar } from "../components/dashboard/DashboardSidebar";
+import { useAuth } from "../hooks/useAuth";
 
 type UserRole = "Admin" | "User";
 
@@ -40,6 +40,18 @@ export function DashboardLayout({
   role,
 }: DashboardLayoutProps) {
   const location = useLocation();
+
+  const { user } = useAuth();
+
+  const userInitials =
+    user?.fullName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((name) => name[0])
+      .join("")
+      .toUpperCase() ??
+    (role === "Admin" ? "FA" : "FU");
 
   const [isCollapsed, setIsCollapsed] =
     useState(false);
@@ -116,7 +128,7 @@ export function DashboardLayout({
               </button>
 
               <div className="hidden sm:grid size-11 place-items-center rounded-xl bg-gradient-to-br from-primary-light to-primary-dark font-display text-sm font-extrabold text-background shadow-lg shadow-primary/10">
-                {role === "Admin" ? "FA" : "FU"}
+                {userInitials}
               </div>
             </div>
           </header>
