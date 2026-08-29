@@ -8,6 +8,7 @@ import { PlaceholderPage } from "../components/common/PlaceholderPage";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 
 import { ROUTES } from "../constants/routes";
+import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage";
 
 export function AppRoutes() {
   return (
@@ -43,7 +44,7 @@ export function AppRoutes() {
         <Route
             path={ROUTES.ADMIN.DASHBOARD}
             element={
-            <PlaceholderPage title="Admin Dashboard" />
+            <AdminDashboardPage />
             }
         />
 
