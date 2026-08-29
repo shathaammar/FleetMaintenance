@@ -186,7 +186,7 @@ export function DashboardSidebar({
                     ? "justify-center px-0"
                     : "gap-3 px-3",
                   isActive
-                    ? "bg-primary text-background shadow-[0_8px_25px_rgba(245,166,35,0.18)]"
+                    ? "bg-gradient-to-r from-[#f9b75f]/90 via-[#f59e0b] to-[#f97316] text-background shadow-[0_12px_30px_rgba(249,115,22,0.28)] ring-1 ring-orange-200/40 backdrop-blur-sm"
                     : "text-text-muted hover:bg-surface-light hover:text-text-main",
                 ].join(" ")
               }
@@ -222,17 +222,24 @@ export function DashboardSidebar({
                 ? "justify-center"
                 : "gap-3 px-3",
               isActive
-                ? "bg-surface-light text-primary"
+                ? "bg-gradient-to-r from-[#f9b75f]/90 via-[#f59e0b] to-[#f97316] text-black shadow-[0_12px_30px_rgba(249,115,22,0.28)] ring-1 ring-orange-200/40 backdrop-blur-sm"
                 : "",
             ].join(" ")
           }
         >
-          <Settings size={19} />
+          {({ isActive }) => (
+            <>
+              <Settings
+                size={19}
+                className={isActive ? "text-white" : "text-current"}
+              />
 
-          {!isCollapsed && (
-            <span className="text-sm font-semibold">
-              Settings
-            </span>
+              {!isCollapsed && (
+                <span className={isActive ? "text-white font-semibold" : "font-semibold"}>
+                  Settings
+                </span>
+              )}
+            </>
           )}
         </NavLink>
 
