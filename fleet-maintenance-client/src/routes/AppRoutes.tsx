@@ -9,6 +9,7 @@ import { DashboardLayout } from "../layouts/DashboardLayout";
 
 import { ROUTES } from "../constants/routes";
 import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage";
+import { LoginPage } from "../pages/auth/LoginPage";
 
 export function AppRoutes() {
   return (
@@ -25,9 +26,7 @@ export function AppRoutes() {
 
       <Route
         path={ROUTES.LOGIN}
-        element={
-          <PlaceholderPage title="Welcome Back" />
-        }
+        element={<LoginPage />}
       />
 
       <Route element={<DashboardLayout role="Admin" />}>

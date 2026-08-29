@@ -3,9 +3,12 @@ import { Toaster } from "react-hot-toast";
 
 import { AppRoutes } from "./routes/AppRoutes";
 
+import { AuthProvider } from "./context/AuthContext";
+
 function App() {
   return (
-    <BrowserRouter>
+  <BrowserRouter>
+    <AuthProvider>
       <AppRoutes />
 
       <Toaster
@@ -19,8 +22,9 @@ function App() {
           },
         }}
       />
-    </BrowserRouter>
-  );
+    </AuthProvider>
+  </BrowserRouter>
+);
 }
 
 export default App;
