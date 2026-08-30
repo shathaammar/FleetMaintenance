@@ -1,121 +1,230 @@
 import {
+  AlertTriangle,
   ArrowRight,
+  CalendarClock,
   CarFront,
   CheckCircle2,
+  CircleDollarSign,
   Clock3,
-  ClipboardList,
-  Plus,
+  Gauge,
+  RefreshCw,
   ShieldAlert,
   Wrench,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { Link } from "react-router-dom";
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
   Cell,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from "recharts";
 
-import { StatCard } from
-  "../../components/dashboard/StatCard";
+import { StatCard } from "../../components/dashboard/StatCard";
 import { ROUTES } from "../../constants/routes";
+import { dashboardService } from "../../services/dashboardService";
+import type { DashboardData, } from "../../types/dashboard";
+import { formatCurrency } from "../../utils/formatCurrency";
+import { formatDate } from "../../utils/formatDate";
+import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
 
-const maintenanceActivity = [
-  { month: "Jan", completed: 18, scheduled: 10 },
-  { month: "Feb", completed: 24, scheduled: 14 },
-  { month: "Mar", completed: 21, scheduled: 12 },
-  { month: "Apr", completed: 32, scheduled: 18 },
-  { month: "May", completed: 28, scheduled: 17 },
-  { month: "Jun", completed: 38, scheduled: 22 },
-  { month: "Jul", completed: 44, scheduled: 26 },
-];
+function DashboardSkeleton() {
+  return (
+    <div className="animate-pulse space-y-6">
+      <div className="h-72 rounded-3xl bg-surface" />
 
-const vehicleStatus = [
-  {
-    name: "Active",
-    value: 68,
-    color: "#22c55e",
-  },
-  {
-    name: "In Maintenance",
-    value: 19,
-    color: "#f5a623",
-  },
-  {
-    name: "Out of Service",
-    value: 8,
-    color: "#ef4444",
-  },
-  {
-    name: "Inactive",
-    value: 5,
-    color: "#64748b",
-  },
-];
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map(
+          (_, index) => (
+            <div
+              key={index}
+              className="h-48 rounded-2xl bg-surface"
+            />
+          ),
+        )}
+      </div>
 
-const recentRequests = [
-  {
-    id: "REQ-1048",
-    vehicle: "Toyota Hilux",
-    plate: "ABC-4521",
-    requester: "Ahmad Khaled",
-    type: "Brake Inspection",
-    status: "Pending",
-    date: "Aug 28, 2026",
-  },
-  {
-    id: "REQ-1047",
-    vehicle: "Ford Transit",
-    plate: "JRD-9045",
-    requester: "Lina Omar",
-    type: "Oil Change",
-    status: "Approved",
-    date: "Aug 27, 2026",
-  },
-  {
-    id: "REQ-1046",
-    vehicle: "Hyundai Tucson",
-    plate: "KSA-7312",
-    requester: "Sami Nasser",
-    type: "Engine Diagnosis",
-    status: "Rejected",
-    date: "Aug 26, 2026",
-  },
-  {
-    id: "REQ-1045",
-    vehicle: "Mercedes Sprinter",
-    plate: "AMM-5820",
-    requester: "Omar Ali",
-    type: "Tire Replacement",
-    status: "Approved",
-    date: "Aug 25, 2026",
-  },
-];
+      <div className="grid gap-6 xl:grid-cols-2">
+        <div className="h-96 rounded-2xl bg-surface" />
+        <div className="h-96 rounded-2xl bg-surface" />
+      </div>
+    </div>
+  );
+}
 
-function getStatusStyles(status: string) {
-  switch (status) {
-    case "Approved":
-      return "bg-emerald-500/10 text-emerald-400";
-    case "Rejected":
-      return "bg-danger/10 text-danger";
-    default:
-      return "bg-primary/10 text-primary";
-  }
+interface DashboardErrorProps {
+  message: string;
+  onRetry: () => void;
+}
+
+function DashboardError({
+  message,
+  onRetry,
+}: DashboardErrorProps) {
+  return (
+    <section className="grid min-h-[65vh] place-items-center">
+      <div className="max-w-md text-center">
+        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-danger/10 text-danger">
+          <AlertTriangle size={30} />
+        </div>
+
+        <h2 className="mt-5 font-display text-2xl font-extrabold text-text-main">
+          Dashboard unavailable
+        </h2>
+
+        <p className="mt-3 text-sm leading-6 text-text-muted">
+          {message}
+        </p>
+
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mx-auto mt-6 flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-background transition hover:bg-primary-light"
+        >
+          <RefreshCw size={17} />
+          Try Again
+        </button>
+      </div>
+    </section>
+  );
 }
 
 export function AdminDashboardPage() {
+  const [
+    dashboard,
+    setDashboard,
+  ] = useState<DashboardData | null>(null);
+
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState<string | null>(null);
+
+  const loadDashboard = useCallback(
+    async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        const data =
+          await dashboardService.getDashboard();
+
+        setDashboard(data);
+      } catch (error) {
+        setErrorMessage(
+          getApiErrorMessage(error),
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (errorMessage) {
+    return (
+      <DashboardError
+        message={errorMessage}
+        onRetry={() => {
+          void loadDashboard();
+        }}
+      />
+    );
+  }
+
+  if (!dashboard) {
+    return (
+      <DashboardError
+        message="Dashboard data could not be loaded."
+        onRetry={() => {
+          void loadDashboard();
+        }}
+      />
+    );
+  }
+
+  const vehicleStatusData = [
+    {
+      name: "Active",
+      value: dashboard.activeVehicles,
+      color: "#22c55e",
+    },
+    {
+      name: "In Maintenance",
+      value:
+        dashboard.vehiclesInMaintenance,
+      color: "#f5a623",
+    },
+    {
+      name: "Out of Service",
+      value:
+        dashboard.outOfServiceVehicles,
+      color: "#ef4444",
+    },
+  ];
+
+  const hasVehicleData =
+    vehicleStatusData.some(
+      (item) => item.value > 0,
+    );
+
+  const operationalItems = [
+    {
+      label: "Scheduled",
+      value:
+        dashboard.scheduledMaintenances,
+      icon: CalendarClock,
+      color:
+        "bg-blue-500/10 text-blue-400",
+    },
+    {
+      label: "Completed",
+      value:
+        dashboard.completedMaintenances,
+      icon: CheckCircle2,
+      color:
+        "bg-emerald-500/10 text-emerald-400",
+    },
+    {
+      label: "Overdue",
+      value:
+        dashboard.overdueMaintenances,
+      icon: ShieldAlert,
+      color:
+        "bg-danger/10 text-danger",
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{
+          opacity: 0,
+          y: 16,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
         className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-surface-light via-surface to-background p-6 shadow-2xl shadow-black/10 lg:p-8"
       >
         <div className="pointer-events-none absolute right-0 top-0 size-72 rounded-full bg-primary/10 blur-[90px]" />
@@ -129,13 +238,14 @@ export function AdminDashboardPage() {
         </div>
 
         <div className="relative z-10 max-w-2xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-xs font-bold text-primary">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-3 py-1.5 text-xs font-bold text-emerald-400">
             <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-primary" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+
+              <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
             </span>
 
-            Fleet system is operational
+            Live fleet overview
           </div>
 
           <h2 className="max-w-xl font-display text-3xl font-extrabold leading-tight text-text-main lg:text-4xl">
@@ -146,27 +256,33 @@ export function AdminDashboardPage() {
           </h2>
 
           <p className="mt-3 max-w-xl text-sm leading-6 text-text-muted lg:text-base">
-            Monitor vehicle health, review maintenance
-            requests and keep every vehicle ready for
-            the road.
+            Monitor vehicle availability,
+            maintenance schedules and operational
+            risks from one intelligent workspace.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              to={ROUTES.ADMIN.MAINTENANCE_REQUESTS}
+              to={
+                ROUTES.ADMIN
+                  .MAINTENANCE_REQUESTS
+              }
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-background transition hover:bg-primary-light"
             >
               Review Requests
               <ArrowRight size={17} />
             </Link>
 
-            <Link
-              to={ROUTES.ADMIN.VEHICLES}
+            <button
+              type="button"
+              onClick={() => {
+                void loadDashboard();
+              }}
               className="inline-flex h-11 items-center gap-2 rounded-xl border border-border-dark bg-surface/70 px-5 text-sm font-bold text-text-main transition hover:border-primary/35 hover:text-primary"
             >
-              <Plus size={17} />
-              Add Vehicle
-            </Link>
+              <RefreshCw size={17} />
+              Refresh Data
+            </button>
           </div>
         </div>
       </motion.section>
@@ -174,9 +290,8 @@ export function AdminDashboardPage() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Total Vehicles"
-          value={124}
-          description="Across the fleet"
-          change={8.2}
+          value={dashboard.totalVehicles}
+          description="Registered vehicles"
           icon={CarFront}
           accent="orange"
           delay={0.05}
@@ -184,377 +299,370 @@ export function AdminDashboardPage() {
 
         <StatCard
           title="Active Vehicles"
-          value={98}
-          description="Currently available"
-          change={5.4}
-          icon={CheckCircle2}
+          value={dashboard.activeVehicles}
+          description="Ready for operation"
+          icon={Gauge}
           accent="green"
           delay={0.1}
         />
 
         <StatCard
-          title="Pending Requests"
-          value={12}
-          description="Require attention"
-          change={-3.1}
-          icon={Clock3}
-          accent="blue"
+          title="In Maintenance"
+          value={
+            dashboard.vehiclesInMaintenance
+          }
+          description="Currently being serviced"
+          icon={Wrench}
+          accent="purple"
           delay={0.15}
         />
 
         <StatCard
-          title="In Maintenance"
-          value={14}
-          description="Being serviced"
-          change={2.6}
-          icon={Wrench}
-          accent="purple"
+          title="Overdue Services"
+          value={
+            dashboard.overdueMaintenances
+          }
+          description="Require attention"
+          icon={Clock3}
+          accent="blue"
           delay={0.2}
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
         <article className="rounded-2xl border border-border-dark bg-surface/70 p-5 backdrop-blur-xl sm:p-6">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="font-display text-lg font-extrabold text-text-main">
-                Maintenance Activity
-              </h3>
+          <div>
+            <h3 className="font-display text-lg font-extrabold text-text-main">
+              Vehicle Availability
+            </h3>
 
-              <p className="mt-1 text-xs text-text-muted">
-                Completed and scheduled maintenance
-              </p>
+            <p className="mt-1 text-xs text-text-muted">
+              Current status of registered vehicles
+            </p>
+          </div>
+
+          {hasVehicleData ? (
+            <>
+              <div className="relative mt-3 h-[220px]">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <PieChart>
+                    <Pie
+                      data={vehicleStatusData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={65}
+                      outerRadius={88}
+                      paddingAngle={5}
+                      stroke="transparent"
+                    >
+                      {vehicleStatusData.map(
+                        (item) => (
+                          <Cell
+                            key={item.name}
+                            fill={item.color}
+                          />
+                        ),
+                      )}
+                    </Pie>
+
+                    <Tooltip
+                      contentStyle={{
+                        background: "#0a1929",
+                        border:
+                          "1px solid #1e3348",
+                        borderRadius: "12px",
+                        color: "#f8fafc",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                <div className="pointer-events-none absolute inset-0 grid place-items-center">
+                  <div className="text-center">
+                    <p className="font-display text-3xl font-extrabold text-text-main">
+                      {dashboard.totalVehicles}
+                    </p>
+
+                    <p className="text-[10px] uppercase tracking-wider text-text-muted">
+                      Vehicles
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {vehicleStatusData.map(
+                  (item) => (
+                    <div
+                      key={item.name}
+                      className="rounded-xl border border-border-dark bg-background/45 p-3 text-center"
+                    >
+                      <span
+                        className="mx-auto block size-2.5 rounded-full"
+                        style={{
+                          backgroundColor:
+                            item.color,
+                        }}
+                      />
+
+                      <p className="mt-2 text-xl font-extrabold text-text-main">
+                        {item.value}
+                      </p>
+
+                      <p className="mt-1 text-[10px] text-text-muted">
+                        {item.name}
+                      </p>
+                    </div>
+                  ),
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="grid h-[315px] place-items-center text-center">
+              <div>
+                <CarFront
+                  size={38}
+                  className="mx-auto text-text-muted/45"
+                />
+
+                <p className="mt-3 text-sm font-bold text-text-main">
+                  No vehicles yet
+                </p>
+
+                <p className="mt-1 text-xs text-text-muted">
+                  Vehicle status will appear here.
+                </p>
+              </div>
             </div>
-
-            <select className="h-9 rounded-lg border border-border-dark bg-background px-3 text-xs font-semibold text-text-muted outline-none focus:border-primary/50">
-              <option>Last 7 months</option>
-              <option>Last 12 months</option>
-            </select>
-          </div>
-
-          <div className="h-[290px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={maintenanceActivity}>
-                <defs>
-                  <linearGradient
-                    id="completedGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="5%"
-                      stopColor="#f5a623"
-                      stopOpacity={0.32}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="#f5a623"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-
-                <CartesianGrid
-                  stroke="#1e3348"
-                  strokeDasharray="4 4"
-                  vertical={false}
-                />
-
-                <XAxis
-                  dataKey="month"
-                  stroke="#64748b"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                />
-
-                <YAxis
-                  stroke="#64748b"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                />
-
-                <Tooltip
-                  contentStyle={{
-                    background: "#0a1929",
-                    border: "1px solid #1e3348",
-                    borderRadius: "12px",
-                    color: "#f8fafc",
-                  }}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="completed"
-                  stroke="#f5a623"
-                  strokeWidth={3}
-                  fill="url(#completedGradient)"
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="scheduled"
-                  stroke="#60a5fa"
-                  strokeWidth={2}
-                  fill="transparent"
-                  strokeDasharray="5 5"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          )}
         </article>
 
         <article className="rounded-2xl border border-border-dark bg-surface/70 p-5 backdrop-blur-xl sm:p-6">
           <div>
             <h3 className="font-display text-lg font-extrabold text-text-main">
-              Vehicle Status
+              Maintenance Overview
             </h3>
 
             <p className="mt-1 text-xs text-text-muted">
-              Current fleet availability
+              Live maintenance performance
             </p>
           </div>
 
-          <div className="relative mt-3 h-[205px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={vehicleStatus}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={62}
-                  outerRadius={85}
-                  paddingAngle={5}
-                  stroke="transparent"
-                >
-                  {vehicleStatus.map((item) => (
-                    <Cell
-                      key={item.name}
-                      fill={item.color}
-                    />
-                  ))}
-                </Pie>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {operationalItems.map(
+              (item) => {
+                const Icon = item.icon;
 
-                <Tooltip
-                  contentStyle={{
-                    background: "#0a1929",
-                    border: "1px solid #1e3348",
-                    borderRadius: "12px",
-                    color: "#f8fafc",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-xl border border-border-dark bg-background/45 p-4"
+                  >
+                    <div
+                      className={[
+                        "grid size-10 place-items-center rounded-xl",
+                        item.color,
+                      ].join(" ")}
+                    >
+                      <Icon size={19} />
+                    </div>
 
-            <div className="pointer-events-none absolute inset-0 grid place-items-center">
-              <div className="text-center">
-                <p className="font-display text-3xl font-extrabold text-text-main">
-                  124
-                </p>
-                <p className="text-[10px] uppercase tracking-wider text-text-muted">
-                  Vehicles
-                </p>
-              </div>
-            </div>
+                    <p className="mt-4 font-display text-2xl font-extrabold text-text-main">
+                      {item.value}
+                    </p>
+
+                    <p className="mt-1 text-xs text-text-muted">
+                      {item.label}
+                    </p>
+                  </div>
+                );
+              },
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {vehicleStatus.map((item) => (
-              <div
-                key={item.name}
-                className="flex items-center gap-2"
-              >
-                <span
-                  className="size-2.5 shrink-0 rounded-full"
-                  style={{
-                    backgroundColor: item.color,
-                  }}
-                />
-
-                <div className="min-w-0">
-                  <p className="truncate text-xs text-text-muted">
-                    {item.name}
-                  </p>
-
-                  <p className="text-sm font-bold text-text-main">
-                    {item.value}%
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
-        <article className="overflow-hidden rounded-2xl border border-border-dark bg-surface/70 backdrop-blur-xl">
-          <div className="flex items-center justify-between border-b border-border-dark p-5 sm:px-6">
+          <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 to-transparent p-5">
             <div>
-              <h3 className="font-display text-lg font-extrabold text-text-main">
-                Recent Requests
-              </h3>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">
+                Total Maintenance Cost
+              </p>
+
+              <p className="mt-2 font-display text-3xl font-extrabold text-text-main">
+                {formatCurrency(
+                  dashboard.totalMaintenanceCost,
+                )}
+              </p>
 
               <p className="mt-1 text-xs text-text-muted">
-                Latest maintenance requests
+                Recorded completed maintenance
               </p>
             </div>
 
-            <Link
-              to={ROUTES.ADMIN.MAINTENANCE_REQUESTS}
-              className="flex items-center gap-1 text-xs font-bold text-primary transition hover:text-primary-light"
-            >
-              View all
-              <ArrowRight size={15} />
-            </Link>
+            <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-background">
+              <CircleDollarSign size={27} />
+            </div>
           </div>
 
+          {dashboard.overdueMaintenances >
+            0 && (
+            <div className="mt-4 flex items-start gap-3 rounded-xl border border-danger/20 bg-danger/8 p-4">
+              <ShieldAlert
+                size={20}
+                className="mt-0.5 shrink-0 text-danger"
+              />
+
+              <div>
+                <p className="text-sm font-bold text-text-main">
+                  Immediate attention required
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-text-muted">
+                  {dashboard.overdueMaintenances}{" "}
+                  maintenance{" "}
+                  {dashboard.overdueMaintenances ===
+                  1
+                    ? "record is"
+                    : "records are"}{" "}
+                  overdue.
+                </p>
+              </div>
+            </div>
+          )}
+        </article>
+      </section>
+
+      <article className="overflow-hidden rounded-2xl border border-border-dark bg-surface/70 backdrop-blur-xl">
+        <div className="flex items-center justify-between border-b border-border-dark p-5 sm:px-6">
+          <div>
+            <h3 className="font-display text-lg font-extrabold text-text-main">
+              Upcoming Maintenance
+            </h3>
+
+            <p className="mt-1 text-xs text-text-muted">
+              Scheduled services requiring follow-up
+            </p>
+          </div>
+
+          <Link
+            to={
+              ROUTES.ADMIN
+                .MAINTENANCE_RECORDS
+            }
+            className="flex items-center gap-1 text-xs font-bold text-primary transition hover:text-primary-light"
+          >
+            View records
+            <ArrowRight size={15} />
+          </Link>
+        </div>
+
+        {dashboard.upcomingMaintenances
+          .length === 0 ? (
+          <div className="grid min-h-64 place-items-center p-8 text-center">
+            <div>
+              <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+                <CheckCircle2 size={27} />
+              </div>
+
+              <h4 className="mt-4 font-display text-lg font-extrabold text-text-main">
+                No upcoming maintenance
+              </h4>
+
+              <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-text-muted">
+                There are currently no scheduled
+                maintenance records requiring
+                follow-up.
+              </p>
+            </div>
+          </div>
+        ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left">
+            <table className="w-full min-w-[700px] text-left">
               <thead>
                 <tr className="border-b border-border-dark text-[10px] uppercase tracking-wider text-text-muted">
                   <th className="px-6 py-4 font-bold">
-                    Request
+                    Record
                   </th>
+
                   <th className="px-4 py-4 font-bold">
                     Vehicle
                   </th>
+
                   <th className="px-4 py-4 font-bold">
-                    Maintenance
+                    Maintenance Type
                   </th>
+
                   <th className="px-4 py-4 font-bold">
-                    Status
+                    Scheduled Date
                   </th>
+
                   <th className="px-6 py-4 font-bold">
-                    Date
+                    Due Mileage
                   </th>
                 </tr>
               </thead>
 
               <tbody>
-                {recentRequests.map((request) => (
-                  <tr
-                    key={request.id}
-                    className="border-b border-border-dark/70 transition last:border-0 hover:bg-surface-light/50"
-                  >
-                    <td className="px-6 py-4">
-                      <p className="text-xs font-bold text-text-main">
-                        {request.id}
-                      </p>
+                {dashboard
+                  .upcomingMaintenances
+                  .map((maintenance) => (
+                    <tr
+                      key={
+                        maintenance
+                          .maintenanceRecordId
+                      }
+                      className="border-b border-border-dark/70 transition last:border-0 hover:bg-surface-light/45"
+                    >
+                      <td className="px-6 py-4 text-xs font-bold text-primary">
+                        #
+                        {
+                          maintenance
+                            .maintenanceRecordId
+                        }
+                      </td>
 
-                      <p className="mt-1 text-[11px] text-text-muted">
-                        {request.requester}
-                      </p>
-                    </td>
+                      <td className="px-4 py-4">
+                        <p className="text-xs font-bold text-text-main">
+                          {
+                            maintenance
+                              .plateNumber
+                          }
+                        </p>
 
-                    <td className="px-4 py-4">
-                      <p className="text-xs font-semibold text-text-main">
-                        {request.vehicle}
-                      </p>
+                        <p className="mt-1 text-[11px] text-text-muted">
+                          Vehicle #
+                          {maintenance.vehicleId}
+                        </p>
+                      </td>
 
-                      <p className="mt-1 text-[11px] text-text-muted">
-                        {request.plate}
-                      </p>
-                    </td>
+                      <td className="px-4 py-4 text-xs text-text-main">
+                        {
+                          maintenance
+                            .maintenanceTypeName
+                        }
+                      </td>
 
-                    <td className="px-4 py-4 text-xs text-text-muted">
-                      {request.type}
-                    </td>
+                      <td className="px-4 py-4 text-xs text-text-muted">
+                        {formatDate(
+                          maintenance
+                            .scheduledDate,
+                        )}
+                      </td>
 
-                    <td className="px-4 py-4">
-                      <span
-                        className={[
-                          "inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold",
-                          getStatusStyles(
-                            request.status,
-                          ),
-                        ].join(" ")}
-                      >
-                        {request.status}
-                      </span>
-                    </td>
-
-                    <td className="px-6 py-4 text-xs text-text-muted">
-                      {request.date}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-6 py-4 text-xs text-text-muted">
+                        {maintenance.dueMileage !==
+                        null
+                          ? `${maintenance.dueMileage.toLocaleString()} km`
+                          : "Not specified"}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
-        </article>
-
-        <article className="rounded-2xl border border-border-dark bg-surface/70 p-5 backdrop-blur-xl sm:p-6">
-          <h3 className="font-display text-lg font-extrabold text-text-main">
-            Attention Required
-          </h3>
-
-          <p className="mt-1 text-xs text-text-muted">
-            Items that need action
-          </p>
-
-          <div className="mt-5 space-y-3">
-            {[
-              {
-                title: "12 pending requests",
-                text: "Waiting for admin review",
-                icon: ClipboardList,
-                color:
-                  "bg-primary/10 text-primary",
-              },
-              {
-                title: "6 overdue services",
-                text: "Maintenance date has passed",
-                icon: ShieldAlert,
-                color:
-                  "bg-danger/10 text-danger",
-              },
-              {
-                title: "4 vehicles unavailable",
-                text: "Currently out of service",
-                icon: CarFront,
-                color:
-                  "bg-blue-500/10 text-blue-400",
-              },
-            ].map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.title}
-                  className="group flex items-center gap-3 rounded-xl border border-border-dark bg-background/50 p-3 transition hover:border-primary/25"
-                >
-                  <div
-                    className={[
-                      "grid size-10 shrink-0 place-items-center rounded-xl",
-                      item.color,
-                    ].join(" ")}
-                  >
-                    <Icon size={18} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-text-main">
-                      {item.title}
-                    </p>
-
-                    <p className="mt-1 text-[11px] text-text-muted">
-                      {item.text}
-                    </p>
-                  </div>
-
-                  <ArrowRight
-                    size={16}
-                    className="text-text-muted transition group-hover:translate-x-1 group-hover:text-primary"
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </article>
-      </section>
+        )}
+      </article>
     </div>
   );
 }
