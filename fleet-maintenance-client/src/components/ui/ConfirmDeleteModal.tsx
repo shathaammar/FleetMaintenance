@@ -5,7 +5,6 @@ import {
 import {
   AlertTriangle,
   LoaderCircle,
-  Trash2,
   X,
 } from "lucide-react";
 
@@ -117,9 +116,7 @@ export function ConfirmDeleteModal({
                     size={18}
                     className="animate-spin"
                   />
-                ) : (
-                  <Trash2 size={18} />
-                )}
+                ) : null}
 
                 {isDeleting
                   ? "Deleting..."

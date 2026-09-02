@@ -10,6 +10,7 @@ import { PublicOnlyRoute } from "./PublicOnlyRoute";
 import { AdminVehiclesPage } from "../pages/admin/AdminVehiclesPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
 import { AdminMaintenanceTypesPage, } from "../pages/admin/AdminMaintenanceTypesPage";
+import { AdminMaintenanceRecordsPage } from "../pages/admin/AdminMaintenanceRecordsPage";
 
 export function AppRoutes() {
   return (
@@ -82,7 +83,7 @@ export function AppRoutes() {
               ROUTES.ADMIN.MAINTENANCE_RECORDS
             }
             element={
-              <PlaceholderPage title="Maintenance Records" />
+              <AdminMaintenanceRecordsPage />
             }
           />
 
