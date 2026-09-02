@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   Check,
   Eye,
   EyeOff,

@@ -6,7 +6,6 @@ import {
 } from "framer-motion";
 import {
   LoaderCircle,
-  Wrench,
   X,
 } from "lucide-react";
 import { useEffect } from "react";

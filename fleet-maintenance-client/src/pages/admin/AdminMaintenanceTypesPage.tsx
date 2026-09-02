@@ -1,12 +1,13 @@
 import {
   AlertTriangle,
   Edit3,
-  FileText,
   Plus,
   RefreshCw,
   Search,
   Trash2,
   Wrench,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   useCallback,
@@ -22,6 +23,8 @@ import { maintenanceTypeService, } from "../../services/maintenanceTypeService";
 import type { MaintenanceType, } from "../../types/maintenanceType";
 import { getApiErrorMessage, } from "../../utils/getApiErrorMessage";
 
+const ITEMS_PER_PAGE = 12;
+
 export function AdminMaintenanceTypesPage() {
   const [
     maintenanceTypes,
@@ -32,6 +35,14 @@ export function AdminMaintenanceTypesPage() {
     search,
     setSearch,
   ] = useState("");
+
+  const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(1);
+
+  const [pageInput, setPageInput] =
+    useState("1");
 
   const [
     isLoading,
@@ -124,6 +135,35 @@ export function AdminMaintenanceTypesPage() {
     search,
   ]);
 
+  const totalPages = Math.ceil(
+  filteredTypes.length / ITEMS_PER_PAGE,
+);
+
+const paginatedTypes = useMemo(() => {
+  const startIndex =
+    (currentPage - 1) * ITEMS_PER_PAGE;
+
+  return filteredTypes.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
+}, [
+  currentPage,
+  filteredTypes,
+]);
+
+const firstVisibleItem =
+  filteredTypes.length === 0
+    ? 0
+    : (currentPage - 1) *
+        ITEMS_PER_PAGE +
+      1;
+
+const lastVisibleItem = Math.min(
+  currentPage * ITEMS_PER_PAGE,
+  filteredTypes.length,
+);
+
   const openCreateModal = () => {
     setSelectedType(null);
     setFormMode("create");
@@ -186,6 +226,41 @@ export function AdminMaintenanceTypesPage() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  useEffect(() => {
+    const lastAvailablePage = Math.max(
+      1,
+      Math.ceil(
+        filteredTypes.length /
+          ITEMS_PER_PAGE,
+      ),
+    );
+
+    setCurrentPage((page) =>
+      Math.min(page, lastAvailablePage),
+    );
+  }, [filteredTypes.length]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    setPageInput(String(currentPage));
+  }, [currentPage]);
+
+  const goToPage = () => {
+    const requestedPage = Number(pageInput);
+    const nextPage =
+      Number.isInteger(requestedPage) &&
+      requestedPage >= 1 &&
+      requestedPage <= totalPages
+        ? requestedPage
+        : 1;
+
+    setCurrentPage(nextPage);
+    setPageInput(String(nextPage));
   };
 
   return (
@@ -288,6 +363,7 @@ export function AdminMaintenanceTypesPage() {
             <button
               type="button"
               onClick={() => {
+                setCurrentPage(1);
                 void loadMaintenanceTypes();
               }}
               disabled={isLoading}
@@ -380,74 +456,157 @@ export function AdminMaintenanceTypesPage() {
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {filteredTypes.map(
-                  (type) => (
-                    <article
-                      key={type.id}
-                      className="group flex min-h-52 flex-col rounded-2xl border border-border-dark bg-background/45 p-5 transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-black/15"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-background">
-                          <Wrench
-                            size={20}
-                          />
+             ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {paginatedTypes.map(
+                    (type) => (
+                      <article
+                        key={type.id}
+                        className="group flex min-h-52 flex-col rounded-2xl border border-border-dark bg-background/45 p-5 transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-black/15"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-background">
+                            <Wrench size={20} />
+                          </div>
+
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openEditModal(type)
+                              }
+                              className="grid size-9 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+                              aria-label={`Edit ${type.name}`}
+                            >
+                              <Edit3 size={16} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openDeleteModal(
+                                  type,
+                                )
+                              }
+                              className="grid size-9 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-danger/30 hover:bg-danger/10 hover:text-danger"
+                              aria-label={`Delete ${type.name}`}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openEditModal(
-                                type,
-                              )
-                            }
-                            className="grid size-9 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                            aria-label={`Edit ${type.name}`}
-                          >
-                            <Edit3
-                              size={16}
-                            />
-                          </button>
+                        <div className="mt-5 flex-1">
+                          <h3 className="font-display text-base font-extrabold text-text-main">
+                            {type.name}
+                          </h3>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openDeleteModal(
-                                type,
-                              )
-                            }
-                            className="grid size-9 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-danger/30 hover:bg-danger/10 hover:text-danger"
-                            aria-label={`Delete ${type.name}`}
-                          >
-                            <Trash2
-                              size={16}
-                            />
-                          </button>
+                          <p className="mt-2 line-clamp-3 text-xs leading-5 text-text-muted">
+                            {type.description ||
+                              "No description provided for this maintenance type."}
+                          </p>
                         </div>
+
+                        <div className="mt-4 border-t border-border-dark pt-3">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted/70">
+                            Service ID #{type.id}
+                          </p>
+                        </div>
+                      </article>
+                    ),
+                  )}
+                </div>
+
+                <div className="mt-6 flex flex-col gap-4 border-t border-border-dark pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-center text-xs text-text-muted sm:text-left">
+                    Showing{" "}
+                    <span className="font-bold text-text-main">
+                      {firstVisibleItem}
+                    </span>
+                    {" – "}
+                    <span className="font-bold text-text-main">
+                      {lastVisibleItem}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-bold text-text-main">
+                      {filteredTypes.length}
+                    </span>{" "}
+                    maintenance types
+                  </p>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCurrentPage(
+                            (page) =>
+                              Math.max(
+                                page - 1,
+                                1,
+                              ),
+                          )
+                        }
+                        disabled={
+                          currentPage === 1
+                        }
+                        className="grid size-8 place-items-center rounded-xl border border-border-dark bg-background/60 text-text-muted transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft
+                          size={10}
+                        />
+                      </button>
+
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={pageInput}
+                          onChange={(event) =>
+                            setPageInput(
+                              event.target.value,
+                            )
+                          }
+                          onBlur={goToPage}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              goToPage();
+                            }
+                          }}
+                          className="size-10 appearance-none rounded-xl border border-primary/35 bg-primary/10 text-center text-sm font-extrabold text-text-main outline-none transition hover:border-primary/60 focus:border-primary focus:bg-primary/15 focus:ring-4 focus:ring-primary/10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          aria-label="Current page"
+                        />
                       </div>
 
-                      <div className="mt-5 flex-1">
-                        <h3 className="font-display text-base font-extrabold text-text-main">
-                          {type.name}
-                        </h3>
-
-                        <p className="mt-2 line-clamp-3 text-xs leading-5 text-text-muted">
-                          {type.description ||
-                            "No description provided for this maintenance type."}
-                        </p>
-                      </div>
-
-                      <div className="mt-4 border-t border-border-dark pt-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted/70">
-                          Service ID #{type.id}
-                        </p>
-                      </div>
-                    </article>
-                  ),
-                )}
-              </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCurrentPage(
+                            (page) =>
+                              Math.min(
+                                page + 1,
+                                totalPages,
+                              ),
+                          )
+                        }
+                        disabled={
+                          currentPage ===
+                          totalPages
+                        }
+                        className="grid size-8 place-items-center rounded-xl border border-border-dark bg-background/60 text-text-muted transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+                        aria-label="Next page"
+                      >
+                        <ChevronRight
+                          size={10}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </section>

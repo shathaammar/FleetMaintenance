@@ -61,6 +61,9 @@ export function AdminVehiclesPage() {
     setPageNumber,
   ] = useState(1);
 
+  const [pageInput, setPageInput] =
+    useState("1");
+
   const [
     isLoading,
     setIsLoading,
@@ -141,6 +144,27 @@ export function AdminVehiclesPage() {
       window.clearTimeout(timeoutId);
     };
   }, [loadVehicles]);
+
+  useEffect(() => {
+    setPageInput(String(pageNumber));
+  }, [pageNumber]);
+
+  const goToPage = () => {
+    const requestedPage = Number(pageInput);
+    const totalPages = Math.max(
+      result.totalPages,
+      1,
+    );
+    const nextPage =
+      Number.isInteger(requestedPage) &&
+      requestedPage >= 1 &&
+      requestedPage <= totalPages
+        ? requestedPage
+        : 1;
+
+    setPageNumber(nextPage);
+    setPageInput(String(nextPage));
+  };
 
   const openCreateModal = () => {
     setSelectedVehicle(null);
@@ -530,21 +554,36 @@ export function AdminVehiclesPage() {
                           current - 1,
                       )
                     }
-                    className="grid size-9 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+                    className="grid size-7 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
                     aria-label="Previous page"
                   >
                     <ChevronLeft
-                      size={17}
+                      size={10}
                     />
                   </button>
 
-                  <span className="min-w-24 text-center text-xs font-bold text-text-main">
-                    Page {result.pageNumber} of{" "}
-                    {Math.max(
+                  <input
+                    type="number"
+                    min={1}
+                    max={Math.max(
                       result.totalPages,
                       1,
                     )}
-                  </span>
+                    value={pageInput}
+                    onChange={(event) =>
+                      setPageInput(
+                        event.target.value,
+                      )
+                    }
+                    onBlur={goToPage}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        goToPage();
+                      }
+                    }}
+                    className="size-9 appearance-none rounded-xl border border-primary/35 bg-primary/10 text-center text-sm font-extrabold text-text-main outline-none transition hover:border-primary/60 focus:border-primary focus:bg-primary/15 focus:ring-4 focus:ring-primary/10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    aria-label="Current page"
+                  />
 
                   <button
                     type="button"
@@ -558,11 +597,11 @@ export function AdminVehiclesPage() {
                           current + 1,
                       )
                     }
-                    className="grid size-9 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+                    className="grid size-7 place-items-center rounded-xl border border-border-dark text-text-muted transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
                     aria-label="Next page"
                   >
                     <ChevronRight
-                      size={17}
+                      size={10}
                     />
                   </button>
                 </div>
