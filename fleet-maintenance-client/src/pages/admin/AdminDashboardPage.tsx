@@ -329,7 +329,7 @@ export function AdminDashboardPage() {
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
+      <section className="grid items-stretch gap-6 xl:grid-cols-[1fr_1.3fr]">
         <article className="rounded-2xl border border-border-dark bg-surface/70 p-5 backdrop-blur-xl sm:p-6">
           <div>
             <h3 className="font-display text-lg font-extrabold text-text-main">
@@ -343,82 +343,72 @@ export function AdminDashboardPage() {
 
           {hasVehicleData ? (
             <>
-              <div className="relative mt-3 h-[220px]">
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                >
-                  <PieChart>
-                    <Pie
-                      data={vehicleStatusData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={65}
-                      outerRadius={88}
-                      paddingAngle={5}
-                      stroke="transparent"
-                    >
-                      {vehicleStatusData.map(
-                        (item) => (
-                          <Cell
-                            key={item.name}
-                            fill={item.color}
-                          />
-                        ),
-                      )}
-                    </Pie>
+              <div className="mt-4 flex min-h-[240px] flex-col items-center justify-center gap-5 sm:flex-row sm:gap-7">
+  <div className="relative size-[190px] shrink-0 sm:size-[210px]">
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={vehicleStatusData}
+          dataKey="value"
+          nameKey="name"
+          innerRadius="70%"
+          outerRadius="92%"
+          paddingAngle={5}
+          stroke="transparent"
+        >
+          {vehicleStatusData.map((item) => (
+            <Cell
+              key={item.name}
+              fill={item.color}
+            />
+          ))}
+        </Pie>
 
-                    <Tooltip
-                      contentStyle={{
-                        background: "#0a1929",
-                        border:
-                          "1px solid #1e3348",
-                        borderRadius: "12px",
-                        color: "#f8fafc",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+        <Tooltip
+          contentStyle={{
+            background: "#0a1929",
+            border: "1px solid #1e3348",
+            borderRadius: "12px",
+            color: "#f8fafc",
+          }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
 
-                <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                  <div className="text-center">
-                    <p className="font-display text-3xl font-extrabold text-text-main">
-                      {dashboard.totalVehicles}
-                    </p>
+    <div className="pointer-events-none absolute inset-0 grid place-items-center">
+      <div className="text-center">
+        <p className="font-display text-2xl font-extrabold text-text-main sm:text-3xl">
+          {dashboard.totalVehicles}
+        </p>
 
-                    <p className="text-[10px] uppercase tracking-wider text-text-muted">
-                      Vehicles
-                    </p>
-                  </div>
-                </div>
-              </div>
+        <p className="mt-1 text-[9px] uppercase tracking-wider text-text-muted sm:text-[10px]">
+          Vehicles
+        </p>
+      </div>
+    </div>
+  </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                {vehicleStatusData.map(
-                  (item) => (
-                    <div
-                      key={item.name}
-                      className="rounded-xl border border-border-dark bg-background/45 p-3 text-center"
-                    >
-                      <span
-                        className="mx-auto block size-2.5 rounded-full"
-                        style={{
-                          backgroundColor:
-                            item.color,
-                        }}
-                      />
+  <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 sm:flex-col sm:items-start sm:gap-5">
+    {vehicleStatusData.map((item) => (
+      <div
+        key={item.name}
+        className="flex items-center gap-2.5"
+      >
+        <span
+          className="size-2.5 shrink-0 rounded-full"
+          style={{
+            backgroundColor: item.color,
+            boxShadow: `0 0 10px ${item.color}55`,
+          }}
+        />
 
-                      <p className="mt-2 text-xl font-extrabold text-text-main">
-                        {item.value}
-                      </p>
-
-                      <p className="mt-1 text-[10px] text-text-muted">
-                        {item.name}
-                      </p>
-                    </div>
-                  ),
-                )}
-              </div>
+        <span className="whitespace-nowrap text-xs font-semibold text-text-muted sm:text-sm">
+          {item.name}
+        </span>
+      </div>
+    ))}
+  </div>
+</div>
             </>
           ) : (
             <div className="grid h-[315px] place-items-center text-center">
@@ -451,39 +441,39 @@ export function AdminDashboardPage() {
             </p>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {operationalItems.map(
-              (item) => {
-                const Icon = item.icon;
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+  {operationalItems.map((item) => {
+    const Icon = item.icon;
 
-                return (
-                  <div
-                    key={item.label}
-                    className="rounded-xl border border-border-dark bg-background/45 p-4"
-                  >
-                    <div
-                      className={[
-                        "grid size-10 place-items-center rounded-xl",
-                        item.color,
-                      ].join(" ")}
-                    >
-                      <Icon size={19} />
-                    </div>
+    return (
+      <div
+        key={item.label}
+        className="flex min-w-0 items-center gap-3 rounded-xl border border-border-dark bg-background/45 p-3"
+      >
+        <div
+          className={[
+            "grid size-10 shrink-0 place-items-center rounded-xl",
+            item.color,
+          ].join(" ")}
+        >
+          <Icon size={19} />
+        </div>
 
-                    <p className="mt-4 font-display text-2xl font-extrabold text-text-main">
-                      {item.value}
-                    </p>
+        <div className="min-w-0">
+          <p className="font-display text-xl font-extrabold leading-none text-text-main">
+            {item.value}
+          </p>
 
-                    <p className="mt-1 text-xs text-text-muted">
-                      {item.label}
-                    </p>
-                  </div>
-                );
-              },
-            )}
-          </div>
+          <p className="mt-1.5 break-words text-[11px] leading-4 text-text-muted">
+            {item.label}
+          </p>
+        </div>
+      </div>
+    );
+  })}
+</div>
 
-          <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 to-transparent p-5">
+          <div className="mt-3 flex items-center justify-between gap-4 rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 to-transparent px-5 py-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-primary">
                 Total Maintenance Cost
@@ -500,14 +490,14 @@ export function AdminDashboardPage() {
               </p>
             </div>
 
-            <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-background">
-              <CircleDollarSign size={27} />
+            <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary text-background">
+              <CircleDollarSign size={24} />
             </div>
           </div>
 
           {dashboard.overdueMaintenances >
             0 && (
-            <div className="mt-4 flex items-start gap-3 rounded-xl border border-danger/20 bg-danger/8 p-4">
+            <div className="mt-3 flex items-center gap-3 rounded-xl border border-danger/20 bg-danger/8 px-4 py-3">
               <ShieldAlert
                 size={20}
                 className="mt-0.5 shrink-0 text-danger"
