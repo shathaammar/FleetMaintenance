@@ -18,7 +18,11 @@ public class CreateMaintenanceRecordDtoValidator
 
         RuleFor(record => record.ScheduledDate)
             .NotEmpty()
-            .WithMessage("Scheduled date is required.");
+            .WithMessage("Scheduled date is required.")
+            .Must(date =>
+                date.Date >= DateTime.UtcNow.Date)
+            .WithMessage(
+                "Scheduled date cannot be in the past.");
 
         RuleFor(record => record.DueMileage)
             .GreaterThan(0)

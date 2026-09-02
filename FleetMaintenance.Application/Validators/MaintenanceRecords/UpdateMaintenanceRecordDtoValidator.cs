@@ -19,8 +19,16 @@ public class UpdateMaintenanceRecordDtoValidator
 
         RuleFor(record => record.ScheduledDate)
             .NotEmpty()
-            .When(record => record.ScheduledDate.HasValue)
-            .WithMessage("Scheduled date cannot be empty.");
+            .WithMessage(
+                "Scheduled date cannot be empty.")
+            .Must(date =>
+                !date.HasValue ||
+                date.Value.Date >=
+                    DateTime.UtcNow.Date)
+            .WithMessage(
+                "Scheduled date cannot be in the past.")
+            .When(record =>
+                record.ScheduledDate.HasValue);
 
         RuleFor(record => record.DueMileage)
             .GreaterThan(0)

@@ -7,10 +7,20 @@ namespace FleetMaintenance.Application.Interfaces.Repositories;
 public interface IMaintenanceRecordRepository
     : IGenericRepository<MaintenanceRecord>
 {
-    Task<List<MaintenanceRecord>> GetAllWithDetailsAsync();
-    Task<PagedResult<MaintenanceRecord>> GetPagedAsync(MaintenanceRecordFilterDto filter);
+    Task<PagedResult<MaintenanceRecord>> GetPagedAsync(
+        MaintenanceRecordFilterDto filter);
 
-    Task<MaintenanceRecord?> GetByIdWithDetailsAsync(int id);
+    Task<MaintenanceRecord?> GetByIdWithDetailsAsync(
+        int id);
 
-    Task<List<MaintenanceRecord>> GetByVehicleIdAsync(int vehicleId);
+    Task<List<MaintenanceRecord>> GetByVehicleIdAsync(
+        int vehicleId);
+
+    Task<bool> HasScheduledDuplicateAsync(
+        int vehicleId,
+        int maintenanceTypeId,
+        DateTime scheduledDate,
+        int? excludedRecordId = null);
+
+    Task<bool> IsLinkedToRequestAsync(int recordId);
 }

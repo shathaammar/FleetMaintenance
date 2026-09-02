@@ -2,12 +2,15 @@
 using FleetMaintenance.Application.DTOs.MaintenanceRecords;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Domain.Entities;
+using FleetMaintenance.Domain.Enums;
 using FleetMaintenance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace FleetMaintenance.Infrastructure.Repositories;
 
-public class MaintenanceRecordRepository: GenericRepository<MaintenanceRecord>, IMaintenanceRecordRepository
+public class MaintenanceRecordRepository
+    : GenericRepository<MaintenanceRecord>,
+      IMaintenanceRecordRepository
 {
     public MaintenanceRecordRepository(
         ApplicationDbContext context)
@@ -15,37 +18,35 @@ public class MaintenanceRecordRepository: GenericRepository<MaintenanceRecord>, 
     {
     }
 
-    public async Task<List<MaintenanceRecord>> GetAllWithDetailsAsync()
-    {
-        return await Context.MaintenanceRecords
-            .AsNoTracking()
-            .Include(record => record.Vehicle)
-            .Include(record => record.MaintenanceType)
-            .OrderByDescending(record => record.ScheduledDate)
-            .ToListAsync();
-    }
-
-    public async Task<PagedResult<MaintenanceRecord>> GetPagedAsync(MaintenanceRecordFilterDto filter)
+    public async Task<PagedResult<MaintenanceRecord>>
+        GetPagedAsync(
+            MaintenanceRecordFilterDto filter)
     {
         IQueryable<MaintenanceRecord> query =
             Context.MaintenanceRecords
                 .AsNoTracking()
                 .Include(record => record.Vehicle)
-                .Include(record => record.MaintenanceType);
+                .Include(record =>
+                    record.MaintenanceType);
 
-        if (!string.IsNullOrWhiteSpace(filter.Search))
+        if (!string.IsNullOrWhiteSpace(
+                filter.Search))
         {
-            string search = filter.Search.Trim();
+            string search =
+                filter.Search.Trim();
 
             query = query.Where(record =>
-                record.Vehicle.PlateNumber.Contains(search) ||
-                record.MaintenanceType.Name.Contains(search));
+                record.Vehicle.PlateNumber
+                    .Contains(search) ||
+                record.MaintenanceType.Name
+                    .Contains(search));
         }
 
         if (filter.VehicleId.HasValue)
         {
             query = query.Where(record =>
-                record.VehicleId == filter.VehicleId.Value);
+                record.VehicleId ==
+                filter.VehicleId.Value);
         }
 
         if (filter.MaintenanceTypeId.HasValue)
@@ -58,33 +59,43 @@ public class MaintenanceRecordRepository: GenericRepository<MaintenanceRecord>, 
         if (filter.Status.HasValue)
         {
             query = query.Where(record =>
-                record.Status == filter.Status.Value);
+                record.Status ==
+                filter.Status.Value);
         }
 
         if (filter.FromDate.HasValue)
         {
-            DateTime fromDate = filter.FromDate.Value.Date;
+            DateTime fromDate =
+                filter.FromDate.Value.Date;
 
             query = query.Where(record =>
-                record.ScheduledDate >= fromDate);
+                record.ScheduledDate >=
+                fromDate);
         }
 
         if (filter.ToDate.HasValue)
         {
             DateTime toDateExclusive =
-                filter.ToDate.Value.Date.AddDays(1);
+                filter.ToDate.Value.Date
+                    .AddDays(1);
 
             query = query.Where(record =>
-                record.ScheduledDate < toDateExclusive);
+                record.ScheduledDate <
+                toDateExclusive);
         }
 
-        int totalCount = await query.CountAsync();
+        int totalCount =
+            await query.CountAsync();
 
-        var records = await query
-            .OrderByDescending(record => record.ScheduledDate)
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .ToListAsync();
+        List<MaintenanceRecord> records =
+            await query
+                .OrderByDescending(record =>
+                    record.ScheduledDate)
+                .Skip(
+                    (filter.PageNumber - 1) *
+                    filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
 
         return new PagedResult<MaintenanceRecord>
         {
@@ -95,23 +106,66 @@ public class MaintenanceRecordRepository: GenericRepository<MaintenanceRecord>, 
         };
     }
 
-    public async Task<MaintenanceRecord?> GetByIdWithDetailsAsync(int id)
+    public async Task<MaintenanceRecord?>
+        GetByIdWithDetailsAsync(int id)
     {
         return await Context.MaintenanceRecords
             .AsNoTracking()
             .Include(record => record.Vehicle)
-            .Include(record => record.MaintenanceType)
-            .FirstOrDefaultAsync(record => record.Id == id);
+            .Include(record =>
+                record.MaintenanceType)
+            .FirstOrDefaultAsync(record =>
+                record.Id == id);
     }
 
-    public async Task<List<MaintenanceRecord>> GetByVehicleIdAsync(int vehicleId)
+    public async Task<List<MaintenanceRecord>>
+        GetByVehicleIdAsync(int vehicleId)
     {
         return await Context.MaintenanceRecords
             .AsNoTracking()
             .Include(record => record.Vehicle)
-            .Include(record => record.MaintenanceType)
-            .Where(record => record.VehicleId == vehicleId)
-            .OrderByDescending(record => record.ScheduledDate)
+            .Include(record =>
+                record.MaintenanceType)
+            .Where(record =>
+                record.VehicleId == vehicleId)
+            .OrderByDescending(record =>
+                record.ScheduledDate)
             .ToListAsync();
+    }
+
+    public async Task<bool>
+        HasScheduledDuplicateAsync(
+            int vehicleId,
+            int maintenanceTypeId,
+            DateTime scheduledDate,
+            int? excludedRecordId = null)
+    {
+        DateTime dayStart =
+            scheduledDate.Date;
+
+        DateTime dayEnd =
+            dayStart.AddDays(1);
+
+        return await Context.MaintenanceRecords
+            .AnyAsync(record =>
+                record.VehicleId == vehicleId &&
+                record.MaintenanceTypeId ==
+                    maintenanceTypeId &&
+                record.Status ==
+                    MaintenanceStatus.Scheduled &&
+                record.ScheduledDate >= dayStart &&
+                record.ScheduledDate < dayEnd &&
+                (!excludedRecordId.HasValue ||
+                 record.Id !=
+                    excludedRecordId.Value));
+    }
+
+    public async Task<bool>
+        IsLinkedToRequestAsync(int recordId)
+    {
+        return await Context.MaintenanceRequests
+            .AnyAsync(request =>
+                request.MaintenanceRecordId ==
+                recordId);
     }
 }

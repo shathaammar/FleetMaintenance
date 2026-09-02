@@ -29,13 +29,6 @@ public class MaintenanceRecordService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<MaintenanceRecordDto>> GetAllAsync()
-    {
-        var records = await _recordRepository.GetAllWithDetailsAsync();
-
-        return records.Select(MapToDto).ToList();
-    }
-
     public async Task<PagedResult<MaintenanceRecordDto>> GetPagedAsync(MaintenanceRecordFilterDto filter)
     {
         var result =
@@ -96,8 +89,28 @@ public class MaintenanceRecordService
         if (maintenanceType is null)
         {
             throw new NotFoundException(
-                $"Maintenance type with ID " +
-                $"{dto.MaintenanceTypeId} was not found.");
+                $"Maintenance type with ID {dto.MaintenanceTypeId} was not found.");
+        }
+
+        if (dto.DueMileage.HasValue &&
+            dto.DueMileage.Value <
+                vehicle.CurrentMileage)
+        {
+            throw new ConflictException(
+                $"Due mileage cannot be less than the vehicle's current mileage of {vehicle.CurrentMileage}.");
+        }
+
+        bool duplicateExists =
+            await _recordRepository
+                .HasScheduledDuplicateAsync(
+                    dto.VehicleId,
+                    dto.MaintenanceTypeId,
+                    dto.ScheduledDate);
+
+        if (duplicateExists)
+        {
+            throw new ConflictException(
+                "A scheduled maintenance record already exists for this vehicle, maintenance type, and date.");
         }
 
         var record = new MaintenanceRecord
@@ -112,6 +125,7 @@ public class MaintenanceRecordService
         };
 
         await _recordRepository.AddAsync(record);
+
         await _unitOfWork.SaveChangesAsync();
 
         return await GetSavedRecordAsync(record.Id);
@@ -121,21 +135,55 @@ public class MaintenanceRecordService
     {
         var record = await GetEditableRecordAsync(id);
 
+        int targetMaintenanceTypeId = dto.MaintenanceTypeId ?? record.MaintenanceTypeId;
+
+        DateTime targetScheduledDate = dto.ScheduledDate ?? record.ScheduledDate;
+
         if (dto.MaintenanceTypeId.HasValue)
         {
-            var maintenanceType =
-                await _typeRepository.GetByIdAsync(
-                    dto.MaintenanceTypeId.Value);
+            var maintenanceType = await _typeRepository.GetByIdAsync(targetMaintenanceTypeId);
 
             if (maintenanceType is null)
             {
                 throw new NotFoundException(
-                    $"Maintenance type with ID " +
-                    $"{dto.MaintenanceTypeId.Value} was not found.");
+                    $"Maintenance type with ID {targetMaintenanceTypeId} was not found.");
+            }
+        }
+
+        if (dto.DueMileage.HasValue)
+        {
+            var vehicle = await _vehicleRepository.GetByIdAsync(record.VehicleId);
+
+            if (vehicle is null)
+            {
+                throw new NotFoundException(
+                    $"Vehicle with ID {record.VehicleId} was not found.");
             }
 
-            record.MaintenanceTypeId =
-                dto.MaintenanceTypeId.Value;
+            if (dto.DueMileage.Value <
+                vehicle.CurrentMileage)
+            {
+                throw new ConflictException(
+                    $"Due mileage cannot be less than the vehicle's current mileage of {vehicle.CurrentMileage}.");
+            }
+        }
+
+        bool duplicateExists =
+            await _recordRepository.HasScheduledDuplicateAsync(
+                record.VehicleId,
+                targetMaintenanceTypeId,
+                targetScheduledDate,
+                excludedRecordId: id);
+
+        if (duplicateExists)
+        {
+            throw new ConflictException(
+                "A scheduled maintenance record already exists for this vehicle, maintenance type, and date.");
+        }
+
+        if (dto.MaintenanceTypeId.HasValue)
+        {
+            record.MaintenanceTypeId =  dto.MaintenanceTypeId.Value;
         }
 
         if (dto.ScheduledDate.HasValue)
@@ -154,6 +202,7 @@ public class MaintenanceRecordService
         }
 
         await _recordRepository.UpdateAsync(record);
+
         await _unitOfWork.SaveChangesAsync();
 
         return await GetSavedRecordAsync(record.Id);
@@ -223,10 +272,19 @@ public class MaintenanceRecordService
         if (record.Status == MaintenanceStatus.Completed)
         {
             throw new ConflictException(
-                "Completed maintenance records cannot be deleted.");
+                "Completed maintenance records cannot be deleted because they are part of the vehicle's service history.");
+        }
+
+        bool isLinkedToRequest = await _recordRepository.IsLinkedToRequestAsync(id);
+
+        if (isLinkedToRequest)
+        {
+            throw new ConflictException(
+                "This maintenance record cannot be deleted because it was created from an approved maintenance request. Cancel it instead.");
         }
 
         await _recordRepository.DeleteAsync(record);
+
         await _unitOfWork.SaveChangesAsync();
     }
 

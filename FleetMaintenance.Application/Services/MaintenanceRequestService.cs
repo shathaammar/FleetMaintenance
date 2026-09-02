@@ -14,7 +14,7 @@ public class MaintenanceRequestService: IMaintenanceRequestService
     private readonly IMaintenanceRequestRepository _maintenanceRequestRepository;
     private readonly IGenericRepository<Vehicle> _vehicleRepository;
     private readonly IGenericRepository<MaintenanceType> _maintenanceTypeRepository;
-    private readonly IGenericRepository<MaintenanceRecord> _maintenanceRecordRepository;
+    private readonly IMaintenanceRecordRepository _maintenanceRecordRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
@@ -22,7 +22,7 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         IMaintenanceRequestRepository maintenanceRequestRepository,
         IGenericRepository<Vehicle> vehicleRepository,
         IGenericRepository<MaintenanceType> maintenanceTypeRepository,
-        IGenericRepository<MaintenanceRecord> maintenanceRecordRepository,
+        IMaintenanceRecordRepository maintenanceRecordRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
@@ -144,27 +144,42 @@ public class MaintenanceRequestService: IMaintenanceRequestService
                 "can be approved.");
         }
 
+        var vehicle = await _vehicleRepository.GetByIdAsync(request.VehicleId);
+
+        if (vehicle is null)
+        {
+            throw new NotFoundException(
+                $"Vehicle with ID {request.VehicleId} was not found.");
+        }
+
+        if (dto.DueMileage.HasValue && dto.DueMileage.Value <vehicle.CurrentMileage)
+        {
+            throw new ConflictException(
+                $"Due mileage cannot be less than the vehicle's current mileage of {vehicle.CurrentMileage}.");
+        }
+
+        bool duplicateExists = await _maintenanceRecordRepository
+            .HasScheduledDuplicateAsync(
+            request.VehicleId,
+            request.MaintenanceTypeId,
+            dto.ScheduledDate);
+
+        if (duplicateExists)
+        {
+            throw new ConflictException(
+                "A scheduled maintenance record already exists for this vehicle, maintenance type, and date.");
+        }
+
         var maintenanceRecord = new MaintenanceRecord
             {
                 VehicleId = request.VehicleId,
-
-                MaintenanceTypeId =
-                    request.MaintenanceTypeId,
-
-                ScheduledDate =
-                    dto.ScheduledDate.Date,
-
-                DueMileage =
-                    dto.DueMileage,
-
-                Notes =
-                    string.IsNullOrWhiteSpace(dto.Notes)
+                MaintenanceTypeId = request.MaintenanceTypeId,
+                ScheduledDate = dto.ScheduledDate.Date,
+                DueMileage = dto.DueMileage,
+                Notes = string.IsNullOrWhiteSpace(dto.Notes)
                         ? request.Description
                         : dto.Notes.Trim(),
-
-                Status =
-                    MaintenanceStatus.Scheduled,
-
+                Status = MaintenanceStatus.Scheduled,
                 CreatedAt = DateTime.UtcNow
             };
 
