@@ -8,6 +8,8 @@ import { LoginPage } from "../pages/auth/LoginPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicOnlyRoute } from "./PublicOnlyRoute";
 import { AdminVehiclesPage } from "../pages/admin/AdminVehiclesPage";
+import { RegisterPage } from "../pages/auth/RegisterPage";
+import { AdminMaintenanceTypesPage, } from "../pages/admin/AdminMaintenanceTypesPage";
 
 export function AppRoutes() {
   return (
@@ -28,6 +30,11 @@ export function AppRoutes() {
           element={<LoginPage />}
         />
       </Route>
+
+      <Route
+        path={ROUTES.REGISTER}
+        element={<RegisterPage />}
+      />
 
       <Route
         element={
@@ -64,11 +71,9 @@ export function AppRoutes() {
           />
 
           <Route
-            path={
-              ROUTES.ADMIN.MAINTENANCE_TYPES
-            }
+            path={ROUTES.ADMIN.MAINTENANCE_TYPES}
             element={
-              <PlaceholderPage title="Maintenance Types" />
+              <AdminMaintenanceTypesPage />
             }
           />
 

@@ -10,7 +10,7 @@ import {
 import { useState, } from "react";
 import { useForm, } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useNavigate, } from "react-router-dom";
+import { Link, useNavigate, } from "react-router-dom";
 import { z, } from "zod";
 
 import fleetNovaLogo from "../../assets/FleetNove-Logo.png";
@@ -366,6 +366,16 @@ export function LoginPage() {
                     : "Sign In"}
                 </button>
               </form>
+
+              <p className="mt-6 text-center text-xs text-text-muted">
+                New to FleetNova?{" "}
+                <Link
+                  to={ROUTES.REGISTER}
+                  className="font-bold text-primary transition hover:text-primary-light underline"
+                >
+                  Create an account
+                </Link>
+              </p>
             </motion.div>
           </div>
 

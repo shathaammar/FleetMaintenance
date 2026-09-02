@@ -8,7 +8,7 @@ import {
 
 import { STORAGE_KEYS } from "../constants/storage";
 import { authService } from "../services/authService";
-import type { AuthUser, LoginRequest, LoginResponse, } from "../types/auth";
+import type { AuthUser, LoginRequest, AuthResponse, RegisterRequest, } from "../types/auth";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -17,6 +17,11 @@ interface AuthContextValue {
   login: (
     credentials: LoginRequest,
   ) => Promise<AuthUser>;
+
+  register: (
+  registrationData: RegisterRequest,
+) => Promise<AuthUser>;
+
   logout: () => void;
 }
 
@@ -61,7 +66,7 @@ export function AuthProvider({
     async (
       credentials: LoginRequest,
     ): Promise<AuthUser> => {
-      const response: LoginResponse =
+      const response: AuthResponse =
   await authService.login(credentials);
 
 const isAdmin = response.roles.some(
@@ -96,6 +101,43 @@ return authenticatedUser;
     [],
   );
 
+  const register = useCallback(
+  async (
+    registrationData:
+      RegisterRequest,
+  ): Promise<AuthUser> => {
+    const response: AuthResponse =
+      await authService.register(
+        registrationData,
+      );
+
+    const authenticatedUser:
+      AuthUser = {
+        userId: response.userId,
+        fullName: response.fullName,
+        email: response.email,
+        role: "User",
+      };
+
+    localStorage.setItem(
+      STORAGE_KEYS.ACCESS_TOKEN,
+      response.token,
+    );
+
+    localStorage.setItem(
+      STORAGE_KEYS.USER,
+      JSON.stringify(
+        authenticatedUser,
+      ),
+    );
+
+    setUser(authenticatedUser);
+
+    return authenticatedUser;
+  },
+  [],
+);
+
   const logout = useCallback(() => {
     localStorage.removeItem(
       STORAGE_KEYS.ACCESS_TOKEN,
@@ -123,6 +165,7 @@ return authenticatedUser;
       isAdmin: user?.role === "Admin",
 
       login,
+      register,
       logout,
     }),
     [user, login, logout],

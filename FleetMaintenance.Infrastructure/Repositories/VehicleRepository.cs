@@ -7,18 +7,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FleetMaintenance.Infrastructure.Repositories;
 
-public class VehicleRepository: GenericRepository<Vehicle>, IVehicleRepository
+public class VehicleRepository
+    : GenericRepository<Vehicle>,
+      IVehicleRepository
 {
-    public VehicleRepository(ApplicationDbContext context)
+    public VehicleRepository(
+        ApplicationDbContext context)
         : base(context)
     {
     }
 
-    public override async Task<List<Vehicle>> GetAllAsync()
+    public override async Task<List<Vehicle>>
+        GetAllAsync()
     {
         return await Context.Vehicles
             .AsNoTracking()
-            .OrderByDescending(vehicle => vehicle.CreatedAt)
+            .OrderByDescending(vehicle =>
+                vehicle.CreatedAt)
             .ToListAsync();
     }
 
@@ -27,18 +32,42 @@ public class VehicleRepository: GenericRepository<Vehicle>, IVehicleRepository
         int? excludedVehicleId = null)
     {
         string normalizedPlateNumber =
-            plateNumber.Trim().ToLower();
+            plateNumber.Trim().ToUpper();
 
-        return await Context.Vehicles.AnyAsync(vehicle =>
-            vehicle.PlateNumber.ToLower() == normalizedPlateNumber &&
-            (!excludedVehicleId.HasValue ||
-             vehicle.Id != excludedVehicleId.Value));
+        return await Context.Vehicles
+            .AnyAsync(vehicle =>
+                vehicle.PlateNumber.ToUpper() ==
+                    normalizedPlateNumber &&
+                (!excludedVehicleId.HasValue ||
+                 vehicle.Id !=
+                    excludedVehicleId.Value));
     }
 
-    public async Task<PagedResult<Vehicle>> GetPagedAsync(VehicleFilterDto filter)
+    public async Task<bool> IsUsedAsync(int id)
     {
-        IQueryable<Vehicle> query = Context.Vehicles
-            .AsNoTracking();
+        bool usedByMaintenanceRecords =
+            await Context.MaintenanceRecords
+                .AnyAsync(record =>
+                    record.VehicleId == id);
+
+        if (usedByMaintenanceRecords)
+        {
+            return true;
+        }
+
+        bool usedByMaintenanceRequests =
+            await Context.MaintenanceRequests
+                .AnyAsync(request =>
+                    request.VehicleId == id);
+
+        return usedByMaintenanceRequests;
+    }
+
+    public async Task<PagedResult<Vehicle>>
+        GetPagedAsync(VehicleFilterDto filter)
+    {
+        IQueryable<Vehicle> query =
+            Context.Vehicles.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
@@ -53,16 +82,22 @@ public class VehicleRepository: GenericRepository<Vehicle>, IVehicleRepository
         if (filter.Status.HasValue)
         {
             query = query.Where(vehicle =>
-                vehicle.Status == filter.Status.Value);
+                vehicle.Status ==
+                    filter.Status.Value);
         }
 
-        int totalCount = await query.CountAsync();
+        int totalCount =
+            await query.CountAsync();
 
-        var vehicles = await query
-            .OrderByDescending(vehicle => vehicle.CreatedAt)
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .ToListAsync();
+        List<Vehicle> vehicles =
+            await query
+                .OrderByDescending(vehicle =>
+                    vehicle.CreatedAt)
+                .Skip(
+                    (filter.PageNumber - 1) *
+                    filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
 
         return new PagedResult<Vehicle>
         {

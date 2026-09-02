@@ -154,7 +154,8 @@ public class VehicleService : IVehicleService
 
     public async Task DeleteAsync(int id)
     {
-        var vehicle = await _genericRepository.GetByIdAsync(id);
+        var vehicle =
+            await _genericRepository.GetByIdAsync(id);
 
         if (vehicle is null)
         {
@@ -162,7 +163,17 @@ public class VehicleService : IVehicleService
                 $"Vehicle with ID {id} was not found.");
         }
 
+        bool isUsed =
+            await _vehicleRepository.IsUsedAsync(id);
+
+        if (isUsed)
+        {
+            throw new ConflictException(
+                $"Vehicle '{vehicle.PlateNumber}' cannot be deleted because it is linked to maintenance records or requests.");
+        }
+
         await _genericRepository.DeleteAsync(vehicle);
+
         await _unitOfWork.SaveChangesAsync();
     }
 

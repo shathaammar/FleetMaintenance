@@ -5,14 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FleetMaintenance.Infrastructure.Repositories;
 
-public class MaintenanceTypeRepository: GenericRepository<MaintenanceType>, IMaintenanceTypeRepository
+public class MaintenanceTypeRepository
+    : GenericRepository<MaintenanceType>,
+      IMaintenanceTypeRepository
 {
-    public MaintenanceTypeRepository(ApplicationDbContext context)
+    public MaintenanceTypeRepository(
+        ApplicationDbContext context)
         : base(context)
     {
     }
 
-    public override async Task<List<MaintenanceType>> GetAllAsync()
+    public override async Task<List<MaintenanceType>>
+        GetAllAsync()
     {
         return await Context.MaintenanceTypes
             .AsNoTracking()
@@ -24,17 +28,33 @@ public class MaintenanceTypeRepository: GenericRepository<MaintenanceType>, IMai
         string name,
         int? excludedId = null)
     {
-        string normalizedName = name.Trim().ToLower();
+        string normalizedName =
+            name.Trim().ToLower();
 
-        return await Context.MaintenanceTypes.AnyAsync(type =>
-            type.Name.ToLower() == normalizedName &&
-            (!excludedId.HasValue ||
-             type.Id != excludedId.Value));
+        return await Context.MaintenanceTypes
+            .AnyAsync(type =>
+                type.Name.ToLower() == normalizedName &&
+                (!excludedId.HasValue ||
+                 type.Id != excludedId.Value));
     }
 
     public async Task<bool> IsUsedAsync(int id)
     {
-        return await Context.MaintenanceRecords
-            .AnyAsync(record => record.MaintenanceTypeId == id);
+        bool usedByRecords =
+            await Context.MaintenanceRecords
+                .AnyAsync(record =>
+                    record.MaintenanceTypeId == id);
+
+        if (usedByRecords)
+        {
+            return true;
+        }
+
+        bool usedByRequests =
+            await Context.MaintenanceRequests
+                .AnyAsync(request =>
+                    request.MaintenanceTypeId == id);
+
+        return usedByRequests;
     }
 }

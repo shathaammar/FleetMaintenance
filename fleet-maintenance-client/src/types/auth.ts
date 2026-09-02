@@ -5,7 +5,14 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface AuthResponse {
   userId: string;
   fullName: string;
   email: string;

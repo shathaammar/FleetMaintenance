@@ -1,134 +1,185 @@
 ﻿using FleetMaintenance.Application.Common.Exceptions;
 using FleetMaintenance.Application.DTOs.MaintenanceTypes;
-using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Application.Interfaces.Services;
 using FleetMaintenance.Application.Interfaces.UnitOfWork;
 using FleetMaintenance.Domain.Entities;
 
-namespace FleetMaintenance.Application.Services
+namespace FleetMaintenance.Application.Services;
+
+public class MaintenanceTypeService
+    : IMaintenanceTypeService
 {
-    public class MaintenanceTypeService : IMaintenanceTypeService
+    private readonly IMaintenanceTypeRepository
+        _maintenanceTypeRepository;
+
+    private readonly IUnitOfWork _unitOfWork;
+
+    private readonly IGenericRepository<MaintenanceType>
+        _genericRepository;
+
+    public MaintenanceTypeService(
+        IMaintenanceTypeRepository maintenanceTypeRepository,
+        IUnitOfWork unitOfWork,
+        IGenericRepository<MaintenanceType> genericRepository)
     {
-        private readonly IMaintenanceTypeRepository _maintenanceTypeRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IGenericRepository<MaintenanceType> _genericRepository;
+        _maintenanceTypeRepository =
+            maintenanceTypeRepository;
 
-        public MaintenanceTypeService(
-            IMaintenanceTypeRepository maintenanceTypeRepository,
-            IUnitOfWork unitOfWork,
-            IGenericRepository<MaintenanceType> genericRepository)
+        _unitOfWork = unitOfWork;
+
+        _genericRepository = genericRepository;
+    }
+
+    public async Task<IEnumerable<MaintenanceTypeDto>>
+        GetAllAsync()
+    {
+        var maintenanceTypes =
+            await _maintenanceTypeRepository.GetAllAsync();
+
+        return maintenanceTypes
+            .Select(MapToDto)
+            .ToList();
+    }
+
+    public async Task<MaintenanceTypeDto>
+        GetByIdAsync(int id)
+    {
+        var maintenanceType =
+            await _genericRepository.GetByIdAsync(id);
+
+        if (maintenanceType is null)
         {
-            _maintenanceTypeRepository = maintenanceTypeRepository;
-            _unitOfWork = unitOfWork;
-            _genericRepository = genericRepository;
+            throw new NotFoundException(
+                $"Maintenance type with ID {id} was not found.");
         }
 
-        public async Task<IEnumerable<MaintenanceTypeDto>> GetAllAsync()
-        {
-            var maintenanceTypes = await _maintenanceTypeRepository.GetAllAsync();
+        return MapToDto(maintenanceType);
+    }
 
-            return maintenanceTypes
-                .Select(MapToDto)
-                .ToList();
+    public async Task<MaintenanceTypeDto>
+        CreateAsync(CreateMaintenanceTypeDto dto)
+    {
+        string name = dto.Name.Trim();
+
+        bool nameExists =
+            await _maintenanceTypeRepository
+                .NameExistsAsync(name);
+
+        if (nameExists)
+        {
+            throw new ConflictException(
+                $"A maintenance type with name '{name}' already exists.");
         }
 
-        public async Task<MaintenanceTypeDto> GetByIdAsync(int id)
+        var maintenanceType = new MaintenanceType
         {
-            var maintenanceType = await _genericRepository.GetByIdAsync(id);
+            Name = name,
+            Description = NormalizeDescription(
+                dto.Description)
+        };
 
-            if (maintenanceType is null)
-            {
-                throw new NotFoundException(
-                    $"MaintenanceType with ID {id} was not found.");
-            }
+        await _genericRepository.AddAsync(
+            maintenanceType);
 
-            return MapToDto(maintenanceType);
+        await _unitOfWork.SaveChangesAsync();
+
+        return MapToDto(maintenanceType);
+    }
+
+    public async Task<MaintenanceTypeDto>
+        UpdateAsync(
+            int id,
+            UpdateMaintenanceTypeDto dto)
+    {
+        var maintenanceType =
+            await _genericRepository.GetByIdAsync(id);
+
+        if (maintenanceType is null)
+        {
+            throw new NotFoundException(
+                $"Maintenance type with ID {id} was not found.");
         }
 
-        public async Task<MaintenanceTypeDto> CreateAsync(CreateMaintenanceTypeDto dto)
+        if (dto.Name is not null)
         {
             string name = dto.Name.Trim();
 
             bool nameExists =
-                await _maintenanceTypeRepository.NameExistsAsync(name);
+                await _maintenanceTypeRepository
+                    .NameExistsAsync(
+                        name,
+                        excludedId: id);
 
             if (nameExists)
             {
-                throw new InvalidOperationException(
+                throw new ConflictException(
                     $"A maintenance type with name '{name}' already exists.");
             }
 
-            var maintenanceType = new MaintenanceType
-            {
-                Name = name,
-                Description = dto.Description?.Trim()
-            };
-
-            await _genericRepository.AddAsync(maintenanceType);
-            await _unitOfWork.SaveChangesAsync();
-
-            return MapToDto(maintenanceType);
+            maintenanceType.Name = name;
         }
 
-        public async Task<MaintenanceTypeDto> UpdateAsync(int id, UpdateMaintenanceTypeDto dto)
+        if (dto.Description is not null)
         {
-            var maintenanceType = await _genericRepository.GetByIdAsync(id);
+            maintenanceType.Description =
+                NormalizeDescription(dto.Description);
+        }
 
-            if (maintenanceType is null)
-            {
-                throw new NotFoundException(
+        await _genericRepository.UpdateAsync(
+            maintenanceType);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return MapToDto(maintenanceType);
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var maintenanceType =
+            await _genericRepository.GetByIdAsync(id);
+
+        if (maintenanceType is null)
+        {
+            throw new NotFoundException(
                 $"Maintenance type with ID {id} was not found.");
-            }
-
-            if (dto.Name is not null)
-            {
-                string name = dto.Name.Trim();
-
-                bool nameExists =
-                    await _maintenanceTypeRepository.NameExistsAsync(name);
-                
-                if (nameExists)
-                {
-                    throw new InvalidOperationException(
-                        $"A maintenance type with name '{name}' already exists.");
-                }
-                maintenanceType.Name = name;
-            }
-
-            if (dto.Description is not null)
-            {
-                maintenanceType.Description = dto.Description.Trim();
-            }
-
-            await _genericRepository.UpdateAsync(maintenanceType);
-            await _unitOfWork.SaveChangesAsync();
-
-            return MapToDto(maintenanceType);
         }
 
-        public async Task DeleteAsync(int id)
+        bool isUsed =
+            await _maintenanceTypeRepository
+                .IsUsedAsync(id);
+
+        if (isUsed)
         {
-            var maintenanceType = await _genericRepository.GetByIdAsync(id);
-
-            if (maintenanceType is null)
-            {
-                throw new NotFoundException(
-                    $"Maintenance type with ID {id} was not found.");
-            }
-
-            await _genericRepository.DeleteAsync(maintenanceType);
-            await _unitOfWork.SaveChangesAsync();
+            throw new ConflictException(
+                $"Maintenance type '{maintenanceType.Name}' cannot be deleted because it is used by maintenance records or requests.");
         }
 
-        private static MaintenanceTypeDto MapToDto(MaintenanceType maintenanceType)
+        await _genericRepository.DeleteAsync(
+            maintenanceType);
+
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private static string? NormalizeDescription(
+        string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
         {
-            return new MaintenanceTypeDto
-            {
-                Id = maintenanceType.Id,
-                Name = maintenanceType.Name,
-                Description = maintenanceType.Description
-            };
+            return null;
         }
+
+        return description.Trim();
+    }
+
+    private static MaintenanceTypeDto MapToDto(
+        MaintenanceType maintenanceType)
+    {
+        return new MaintenanceTypeDto
+        {
+            Id = maintenanceType.Id,
+            Name = maintenanceType.Name,
+            Description = maintenanceType.Description
+        };
     }
 }

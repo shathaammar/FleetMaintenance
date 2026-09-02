@@ -1,21 +1,33 @@
 import { apiClient } from "../api/apiClient";
+import type { ApiResponse, } from "../types/api";
 import type {
-  ApiResponse,
-} from "../types/api";
-import type {
+  AuthResponse,
   LoginRequest,
-  LoginResponse,
+  RegisterRequest,
 } from "../types/auth";
 
 export const authService = {
   async login(
     credentials: LoginRequest,
-  ): Promise<LoginResponse> {
+  ): Promise<AuthResponse> {
     const response = await apiClient.post<
-      ApiResponse<LoginResponse>
+      ApiResponse<AuthResponse>
     >(
       "/auth/login",
       credentials,
+    );
+
+    return response.data.data;
+  },
+
+  async register(
+    registrationData: RegisterRequest,
+  ): Promise<AuthResponse> {
+    const response = await apiClient.post<
+      ApiResponse<AuthResponse>
+    >(
+      "/auth/register",
+      registrationData,
     );
 
     return response.data.data;
