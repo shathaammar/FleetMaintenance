@@ -15,6 +15,13 @@ public class MaintenanceRequestFilterDtoValidator
             .WithMessage(
                 "Search cannot exceed 100 characters.");
 
+        RuleFor(filter => filter.Status)
+            .IsInEnum()
+            .When(filter =>
+            filter.Status.HasValue)
+            .WithMessage(
+            "Invalid maintenance request status.");
+
         RuleFor(filter => filter.PageNumber)
             .GreaterThan(0)
             .WithMessage(

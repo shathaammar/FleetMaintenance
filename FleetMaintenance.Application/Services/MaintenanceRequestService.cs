@@ -140,8 +140,7 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         if (request.Status != MaintenanceRequestStatus.Pending)
         {
             throw new ConflictException(
-                "Only pending maintenance requests " +
-                "can be approved.");
+                $"Only pending maintenance requests can be approved. This request is currently {request.Status}.");
         }
 
         var vehicle = await _vehicleRepository.GetByIdAsync(request.VehicleId);
@@ -215,8 +214,7 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         if (request.Status != MaintenanceRequestStatus.Pending)
         {
             throw new ConflictException(
-                "Only pending maintenance requests " +
-                "can be rejected.");
+                $"Only pending maintenance requests can be rejected. This request is currently {request.Status}.");
         }
 
         request.Status = MaintenanceRequestStatus.Rejected;
@@ -232,6 +230,37 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         await _unitOfWork.SaveChangesAsync();
 
         return await GetByIdAsync(request.Id);
+    }
+
+    public async Task<MaintenanceRequestDto> CancelMyRequestAsync(int id)
+    {
+        string userId = _currentUserService.UserId;
+
+        MaintenanceRequest? request = await _maintenanceRequestRepository.GetByIdAsync(id);
+
+        if (request is null || request.RequestedByUserId != userId)
+        {
+            throw new NotFoundException("Maintenance request was not found.");
+        }
+
+        if (request.Status != MaintenanceRequestStatus.Pending)
+        {
+            throw new ConflictException(
+                $"Only pending maintenance requests can be cancelled. This request is currently {request.Status}.");
+        }
+
+        request.Status = MaintenanceRequestStatus.Cancelled;
+
+        request.ReviewedAt = null;
+        request.ReviewedByUserId = null;
+        request.RejectionReason = null;
+        request.MaintenanceRecordId = null;
+
+        await _maintenanceRequestRepository.UpdateAsync(request);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return await GetMyRequestByIdAsync(request.Id);
     }
 
 

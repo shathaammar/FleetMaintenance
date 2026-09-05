@@ -18,4 +18,6 @@ public interface IMaintenanceRequestService
     Task<MaintenanceRequestDto> ApproveAsync(int id, ApproveMaintenanceRequestDto dto);
 
     Task<MaintenanceRequestDto> RejectAsync(int id, RejectMaintenanceRequestDto dto);
+
+    Task<MaintenanceRequestDto> CancelMyRequestAsync(int id);
 }

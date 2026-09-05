@@ -112,6 +112,22 @@ public class MaintenanceRequestsController : ControllerBase
     }
 
     [Authorize(Roles = AppRoles.User)]
+    [HttpPatch("my/{id:int}/cancel")]
+    public async Task<ActionResult<ApiResponse<MaintenanceRequestDto>>> CancelMyRequest(int id)
+    {
+        var request = await _maintenanceRequestService.CancelMyRequestAsync(id);
+
+        return Ok(
+            new ApiResponse<MaintenanceRequestDto>
+            {
+                Success = true,
+                Message =
+                    "Maintenance request cancelled successfully.",
+                Data = request
+            });
+    }
+
+    [Authorize(Roles = AppRoles.User)]
     [HttpPost]
     public async Task<ActionResult<ApiResponse<MaintenanceRequestDto>>> Create(CreateMaintenanceRequestDto dto)
     {

@@ -61,10 +61,11 @@ public class MaintenanceRequestRepository: GenericRepository<MaintenanceRequest>
         {
             string search = filter.Search.Trim();
 
-            query = query.Where(request =>
-                request.Vehicle.PlateNumber.Contains(search) ||
-                request.MaintenanceType.Name.Contains(search) ||
-                request.Description.Contains(search));
+            query = query.Where(request => request.Vehicle.PlateNumber.Contains(search) ||
+            request.MaintenanceType.Name.Contains(search) ||
+            request.Description.Contains(search) || 
+            request.RequestedByFullName.Contains(search) ||
+            request.RequestedByEmail.Contains(search));
         }
 
         if (filter.Status.HasValue)
