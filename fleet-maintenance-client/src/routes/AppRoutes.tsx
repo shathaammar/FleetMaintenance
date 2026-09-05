@@ -11,6 +11,7 @@ import { AdminVehiclesPage } from "../pages/admin/AdminVehiclesPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
 import { AdminMaintenanceTypesPage, } from "../pages/admin/AdminMaintenanceTypesPage";
 import { AdminMaintenanceRecordsPage } from "../pages/admin/AdminMaintenanceRecordsPage";
+import { AdminMaintenanceRequestsPage } from "../pages/admin/AdminMaintenanceRequestsPage";
 
 export function AppRoutes() {
   return (
@@ -92,7 +93,7 @@ export function AppRoutes() {
               ROUTES.ADMIN.MAINTENANCE_REQUESTS
             }
             element={
-              <PlaceholderPage title="Maintenance Requests" />
+              <AdminMaintenanceRequestsPage />
             }
           />
 

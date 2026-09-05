@@ -8,6 +8,7 @@ import {
   Wrench,
   ChevronLeft,
   ChevronRight,
+  FilterX,
 } from "lucide-react";
 import {
   useCallback,
@@ -134,6 +135,11 @@ export function AdminMaintenanceTypesPage() {
     maintenanceTypes,
     search,
   ]);
+
+  const clearFilters = () => {
+    setSearch("");
+    setCurrentPage(1);
+  };
 
   const totalPages = Math.ceil(
   filteredTypes.length / ITEMS_PER_PAGE,
@@ -339,8 +345,9 @@ const lastVisibleItem = Math.min(
         </section> */}
 
         <section className="rounded-2xl border border-border-dark bg-surface/70 backdrop-blur-xl">
-          <div className="flex flex-col gap-3 border-b border-border-dark p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="relative w-full sm:max-w-md">
+          <div className="border-b border-border-dark p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative w-full sm:max-w-md">
               <Search
                 size={17}
                 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
@@ -358,27 +365,39 @@ const lastVisibleItem = Math.min(
                 placeholder="Search name or description..."
                 className="h-11 w-full rounded-xl border border-border-dark bg-background/60 pl-11 pr-4 text-sm text-text-main outline-none transition placeholder:text-text-muted/55 focus:border-primary/50 focus:ring-4 focus:ring-primary/5"
               />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentPage(1);
+                  void loadMaintenanceTypes();
+                }}
+                disabled={isLoading}
+                className="grid size-11 shrink-0 place-items-center rounded-xl border border-border-dark bg-background/60 text-text-muted transition hover:border-primary/30 hover:text-primary disabled:opacity-50"
+                aria-label="Refresh maintenance types"
+              >
+                <RefreshCw
+                  size={18}
+                  className={
+                    isLoading
+                      ? "animate-spin"
+                      : ""
+                  }
+                />
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentPage(1);
-                void loadMaintenanceTypes();
-              }}
-              disabled={isLoading}
-              className="grid size-11 shrink-0 place-items-center rounded-xl border border-border-dark bg-background/60 text-text-muted transition hover:border-primary/30 hover:text-primary disabled:opacity-50"
-              aria-label="Refresh maintenance types"
-            >
-              <RefreshCw
-                size={18}
-                className={
-                  isLoading
-                    ? "animate-spin"
-                    : ""
-                }
-              />
-            </button>
+            {Boolean(search.trim()) && filteredTypes.length > 0 && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-3 inline-flex h-9 items-center gap-2 rounded-xl border border-border-dark px-3 text-xs font-bold text-text-muted transition hover:border-primary/30 hover:text-primary"
+              >
+                <FilterX size={15} />
+                Clear all filters
+              </button>
+            )}
           </div>
 
           <div className="p-4 sm:p-5">

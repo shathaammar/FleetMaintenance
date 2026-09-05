@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit3,
+  FilterX,
   Plus,
   RefreshCw,
   Search,
@@ -203,6 +204,15 @@ export function AdminVehiclesPage() {
     void loadVehicles();
   };
 
+  const clearFilters = () => {
+    setSearch("");
+    setStatus("");
+    setPageNumber(1);
+  };
+
+  const hasActiveFilters =
+    Boolean(search.trim()) || Boolean(status);
+
   const startItem =
     result.totalCount === 0
       ? 0
@@ -245,8 +255,9 @@ export function AdminVehiclesPage() {
         </section>
 
         <section className="min-w-0 overflow-hidden rounded-2xl border border-border-dark bg-surface/70 backdrop-blur-xl">
-          <div className="flex flex-col gap-3 border-b border-border-dark p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+          <div className="border-b border-border-dark p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-1 flex-col gap-3 sm:flex-row">
               <div className="relative w-full sm:max-w-sm">
                 <Search
                   size={17}
@@ -298,26 +309,38 @@ export function AdminVehiclesPage() {
                   ),
                 )}
               </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  void loadVehicles();
+                }}
+                disabled={isLoading}
+                className="grid h-11 w-full shrink-0 place-items-center rounded-xl border border-border-dark bg-background/60 text-text-muted transition hover:border-primary/30 hover:text-primary disabled:opacity-50 sm:size-11"
+                aria-label="Refresh vehicles"
+              >
+                <RefreshCw
+                  size={18}
+                  className={
+                    isLoading
+                      ? "animate-spin"
+                      : ""
+                  }
+                />
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                void loadVehicles();
-              }}
-              disabled={isLoading}
-              className="grid h-11 w-full shrink-0 place-items-center rounded-xl border border-border-dark bg-background/60 text-text-muted transition hover:border-primary/30 hover:text-primary disabled:opacity-50 sm:size-11"
-              aria-label="Refresh vehicles"
-            >
-              <RefreshCw
-                size={18}
-                className={
-                  isLoading
-                    ? "animate-spin"
-                    : ""
-                }
-              />
-            </button>
+            {hasActiveFilters && result.items.length > 0 && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-3 inline-flex h-9 items-center gap-2 rounded-xl border border-border-dark px-3 text-xs font-bold text-text-muted transition hover:border-primary/30 hover:text-primary"
+              >
+                <FilterX size={15} />
+                Clear all filters
+              </button>
+            )}
           </div>
 
           {isLoading ? (
