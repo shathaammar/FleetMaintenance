@@ -1,3 +1,5 @@
+import type { MaintenanceRequestStatus, } from "./maintenanceRequest";
+
 export interface UpcomingMaintenance {
   maintenanceRecordId: number;
   vehicleId: number;
@@ -17,4 +19,28 @@ export interface DashboardData {
   completedMaintenances: number;
   totalMaintenanceCost: number;
   upcomingMaintenances: UpcomingMaintenance[];
+}
+
+export interface RecentMaintenanceRequest {
+  id: number;
+  vehicleId: number;
+  vehiclePlateNumber: string;
+  maintenanceTypeId: number;
+  maintenanceTypeName: string;
+  description: string;
+  preferredDate: string | null;
+  status: MaintenanceRequestStatus;
+  requestedAt: string;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  maintenanceRecordId: number | null;
+}
+
+export interface UserDashboardData {
+  totalRequests: number;
+  pendingRequests: number;
+  approvedRequests: number;
+  rejectedRequests: number;
+  cancelledRequests: number;
+  recentRequests: RecentMaintenanceRequest[];
 }

@@ -1,6 +1,11 @@
 import { apiClient } from "../api/apiClient";
+
 import type { ApiResponse, } from "../types/api";
-import type { DashboardData, } from "../types/dashboard";
+
+import type {
+  DashboardData,
+  UserDashboardData,
+} from "../types/dashboard";
 
 export const dashboardService = {
   async getDashboard():
@@ -8,6 +13,15 @@ export const dashboardService = {
     const response = await apiClient.get<
       ApiResponse<DashboardData>
     >("/dashboard");
+
+    return response.data.data;
+  },
+
+  async getUserDashboard():
+    Promise<UserDashboardData> {
+    const response = await apiClient.get<
+      ApiResponse<UserDashboardData>
+    >("/dashboard/my");
 
     return response.data.data;
   },

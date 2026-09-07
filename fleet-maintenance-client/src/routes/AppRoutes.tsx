@@ -13,6 +13,7 @@ import { AdminMaintenanceTypesPage, } from "../pages/admin/AdminMaintenanceTypes
 import { AdminMaintenanceRecordsPage } from "../pages/admin/AdminMaintenanceRecordsPage";
 import { AdminMaintenanceRequestsPage } from "../pages/admin/AdminMaintenanceRequestsPage";
 import { UserCreateMaintenanceRequestPage } from "../pages/user/UserCreateMaintenanceRequestPage";
+import { UserDashboardPage } from "../pages/user/UserDashboardPage";
 import { UserMaintenanceRequestsPage } from "../pages/user/UserMaintenanceRequestsPage";
 
 export function AppRoutes() {
@@ -133,7 +134,7 @@ export function AppRoutes() {
           <Route
             path={ROUTES.USER.DASHBOARD}
             element={
-              <PlaceholderPage title="My Dashboard" />
+              <UserDashboardPage />
             }
           />
 
