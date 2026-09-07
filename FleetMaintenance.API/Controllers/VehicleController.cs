@@ -1,13 +1,15 @@
-﻿using FluentValidation;
+﻿using FleetMaintenance.Application.Common.Authorization;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Mvc;
-using FleetMaintenance.Application.Common.Authorization;
+using FleetMaintenance.Domain.Enums;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FleetMaintenance.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class VehiclesController : ControllerBase
@@ -48,6 +50,30 @@ public class VehiclesController : ControllerBase
             Message = "Vehicles retrieved successfully.",
             Data = vehicles
         });
+    }
+
+    [Authorize(Roles = AppRoles.User)]
+    [HttpGet("available")]
+    public async Task<ActionResult<ApiResponse<PagedResult<VehicleDto>>>> GetAvailable([FromQuery] VehicleFilterDto filter)
+    {
+        filter.Status = VehicleStatus.Active;
+
+        var validationResult = await _filterValidator.ValidateAsync(filter);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(CreateValidationResponse(validationResult));
+        }
+
+        var vehicles = await _vehicleService.GetPagedAsync(filter);
+
+        return Ok(
+            new ApiResponse<PagedResult<VehicleDto>>
+            {
+                Success = true,
+                Message = "Available vehicles retrieved successfully.",
+                Data = vehicles
+            });
     }
 
     [HttpGet("{id:int}")]

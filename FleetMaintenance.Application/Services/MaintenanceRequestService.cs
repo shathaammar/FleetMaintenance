@@ -90,6 +90,13 @@ public class MaintenanceRequestService: IMaintenanceRequestService
                 "Vehicle was not found.");
         }
 
+        if (vehicle.Status != VehicleStatus.Active)
+        {
+            throw new ConflictException(
+                "Maintenance requests can only be submitted " +
+                "for active vehicles.");
+        }
+
         MaintenanceType? maintenanceType = await _maintenanceTypeRepository.GetByIdAsync(dto.MaintenanceTypeId);
 
         if (maintenanceType is null)
