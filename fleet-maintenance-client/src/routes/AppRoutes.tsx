@@ -12,6 +12,8 @@ import { RegisterPage } from "../pages/auth/RegisterPage";
 import { AdminMaintenanceTypesPage, } from "../pages/admin/AdminMaintenanceTypesPage";
 import { AdminMaintenanceRecordsPage } from "../pages/admin/AdminMaintenanceRecordsPage";
 import { AdminMaintenanceRequestsPage } from "../pages/admin/AdminMaintenanceRequestsPage";
+import { UserCreateMaintenanceRequestPage } from "../pages/user/UserCreateMaintenanceRequestPage";
+import { UserMaintenanceRequestsPage } from "../pages/user/UserMaintenanceRequestsPage";
 
 export function AppRoutes() {
   return (
@@ -145,14 +147,14 @@ export function AppRoutes() {
           <Route
             path={ROUTES.USER.NEW_REQUEST}
             element={
-              <PlaceholderPage title="New Maintenance Request" />
+              <UserCreateMaintenanceRequestPage />
             }
           />
 
           <Route
             path={ROUTES.USER.MY_REQUESTS}
             element={
-              <PlaceholderPage title="My Maintenance Requests" />
+              <UserMaintenanceRequestsPage />
             }
           />
 

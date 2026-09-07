@@ -62,7 +62,7 @@ const pageTitles: Record<
     "New Maintenance Request",
 
   "/user/maintenance-requests":
-    "My Maintenance Requests",
+    "Maintenance Requests",
 
   "/user/settings":
     "Settings",

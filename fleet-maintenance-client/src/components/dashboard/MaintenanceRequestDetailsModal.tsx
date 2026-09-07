@@ -1,12 +1,8 @@
 import {
   CalendarCheck2,
   CalendarDays,
-  CarFront,
-  ClipboardList,
   Hash,
   Mail,
-  NotebookText,
-  UserRound,
   Wrench,
   X,
 } from "lucide-react";
