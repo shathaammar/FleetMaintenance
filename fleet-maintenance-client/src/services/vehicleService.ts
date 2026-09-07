@@ -38,6 +38,30 @@ export const vehicleService = {
     return response.data.data;
   },
 
+  async getAvailableVehicles(
+  filters: VehicleFilters,
+): Promise<PagedResult<Vehicle>> {
+  const response = await apiClient.get<
+    ApiResponse<PagedResult<Vehicle>>
+  >(
+    "/vehicles/available",
+    {
+      params: {
+        search:
+          filters.search || undefined,
+
+        pageNumber:
+          filters.pageNumber,
+
+        pageSize:
+          filters.pageSize,
+      },
+    },
+  );
+
+  return response.data.data;
+},
+
   async getVehicleById(
     id: number,
   ): Promise<Vehicle> {

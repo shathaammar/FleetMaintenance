@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import {
   Link,
   useNavigate,
+  useSearchParams,
 } from "react-router-dom";
 
 import { maintenanceRequestService } from "../../services/maintenanceRequestService";
@@ -80,6 +81,12 @@ function toApiDate(value: string) {
 export function UserCreateMaintenanceRequestPage() {
   const navigate = useNavigate();
 
+  const [searchParams] =
+  useSearchParams();
+
+  const requestedVehicleId =
+    searchParams.get("vehicleId");
+
   const [
     values,
     setValues,
@@ -118,42 +125,63 @@ export function UserCreateMaintenanceRequestPage() {
   ] = useState<string | null>(null);
 
   const loadOptions = async () => {
-    try {
-      setIsLoading(true);
-      setLoadError(null);
+  try {
+    setIsLoading(true);
+    setLoadError(null);
 
-      const [
-        vehiclesResult,
-        typesResult,
-      ] = await Promise.all([
-        vehicleService.getVehicles({
-          search: "",
-          pageNumber: 1,
-          pageSize: 100,
-        }),
+    const [
+      vehiclesResult,
+      typesResult,
+    ] = await Promise.all([
+      vehicleService.getAvailableVehicles({
+        search: "",
+        pageNumber: 1,
+        pageSize: 100,
+      }),
 
-        maintenanceTypeService.getAll(),
-      ]);
+      maintenanceTypeService.getAll(),
+    ]);
 
-      setVehicles(
-        vehiclesResult.items,
-      );
+    const availableVehicles =
+      vehiclesResult.items;
 
-      setMaintenanceTypes(
-        typesResult,
-      );
-    } catch (error) {
-      setLoadError(
-        getApiErrorMessage(error),
-      );
-    } finally {
-      setIsLoading(false);
+    setVehicles(availableVehicles);
+    setMaintenanceTypes(typesResult);
+
+    if (requestedVehicleId) {
+      const parsedVehicleId =
+        Number(requestedVehicleId);
+
+      const selectedVehicle =
+        availableVehicles.find(
+          (vehicle) =>
+            vehicle.id === parsedVehicleId,
+        );
+
+      if (
+        Number.isInteger(parsedVehicleId) &&
+        parsedVehicleId > 0 &&
+        selectedVehicle
+      ) {
+        setValues((current) => ({
+          ...current,
+          vehicleId:
+            String(selectedVehicle.id),
+        }));
+      }
     }
-  };
+  } catch (error) {
+    setLoadError(
+      getApiErrorMessage(error),
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
-    void loadOptions();
-  }, []);
+  void loadOptions();
+}, [requestedVehicleId]);
 
   const updateValue = (
     field: keyof FormValues,
@@ -168,6 +196,7 @@ export function UserCreateMaintenanceRequestPage() {
       ...current,
       [field]: undefined,
     }));
+
   };
 
   const validate = () => {

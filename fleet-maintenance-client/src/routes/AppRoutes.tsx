@@ -15,6 +15,7 @@ import { AdminMaintenanceRequestsPage } from "../pages/admin/AdminMaintenanceReq
 import { UserCreateMaintenanceRequestPage } from "../pages/user/UserCreateMaintenanceRequestPage";
 import { UserDashboardPage } from "../pages/user/UserDashboardPage";
 import { UserMaintenanceRequestsPage } from "../pages/user/UserMaintenanceRequestsPage";
+import { UserVehiclesPage } from "../pages/user/UserVehiclesPage";
 
 export function AppRoutes() {
   return (
@@ -141,7 +142,7 @@ export function AppRoutes() {
           <Route
             path={ROUTES.USER.VEHICLES}
             element={
-              <PlaceholderPage title="Available Vehicles" />
+              <UserVehiclesPage />
             }
           />
 

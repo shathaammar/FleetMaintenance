@@ -56,7 +56,7 @@ const pageTitles: Record<
     "My Dashboard",
 
   "/user/vehicles":
-    "Available Vehicles",
+    "Vehicles",
 
   "/user/maintenance-requests/new":
     "New Maintenance Request",
