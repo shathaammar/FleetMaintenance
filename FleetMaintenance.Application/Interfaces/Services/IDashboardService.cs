@@ -5,4 +5,6 @@ namespace FleetMaintenance.Application.Interfaces.Services;
 public interface IDashboardService
 {
     Task<DashboardDto> GetDashboardAsync();
+
+    Task<UserDashboardDto> GetUserDashboardAsync();
 }

@@ -97,9 +97,70 @@ public class DashboardRepository : IDashboardRepository
         };
     }
 
+    public async Task<UserDashboardDto> GetUserDashboardAsync(string userId)
+    {
+        var statusCounts = await _context.MaintenanceRequests
+                .AsNoTracking()
+                .Where(request =>
+                    request.RequestedByUserId == userId)
+                .GroupBy(request => request.Status)
+                .Select(group => new
+                {
+                    Status = group.Key,
+                    Count = group.Count()
+                })
+                .ToDictionaryAsync(
+                    item => item.Status,
+                    item => item.Count);
+
+        var recentRequests = await _context.MaintenanceRequests
+                .AsNoTracking()
+                .Where(request =>
+                    request.RequestedByUserId == userId)
+                .OrderByDescending(request =>
+                    request.RequestedAt)
+                .Take(5)
+                .Select(request =>
+                    new RecentMaintenanceRequestDto
+                    {
+                        Id = request.Id,
+                        VehicleId = request.VehicleId,
+                        VehiclePlateNumber = request.Vehicle.PlateNumber,
+                        MaintenanceTypeId = request.MaintenanceTypeId,
+                        MaintenanceTypeName = request.MaintenanceType.Name,
+                        Description = request.Description,
+                        PreferredDate = request.PreferredDate,
+                        Status = request.Status,
+                        RequestedAt = request.RequestedAt,
+                        ReviewedAt = request.ReviewedAt,
+                        RejectionReason = request.RejectionReason,
+                        MaintenanceRecordId = request.MaintenanceRecordId
+                    })
+                .ToListAsync();
+
+        return new UserDashboardDto
+        {
+            TotalRequests = statusCounts.Values.Sum(),
+            PendingRequests = GetRequestStatusCount(statusCounts, MaintenanceRequestStatus.Pending),
+            ApprovedRequests = GetRequestStatusCount(statusCounts, MaintenanceRequestStatus.Approved),
+            RejectedRequests = GetRequestStatusCount(statusCounts, MaintenanceRequestStatus.Rejected),
+            CancelledRequests = GetRequestStatusCount(statusCounts, MaintenanceRequestStatus.Cancelled),
+            RecentRequests = recentRequests
+        };
+    }
+
     private static int GetStatusCount(
         Dictionary<VehicleStatus, int> counts,
         VehicleStatus status)
+    {
+        return counts.TryGetValue(status, out int count)
+            ? count
+            : 0;
+    }
+
+    private static int GetRequestStatusCount(
+    Dictionary<MaintenanceRequestStatus, int> counts,
+    MaintenanceRequestStatus status)
     {
         return counts.TryGetValue(status, out int count)
             ? count

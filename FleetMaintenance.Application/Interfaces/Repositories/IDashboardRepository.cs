@@ -5,4 +5,6 @@ namespace FleetMaintenance.Application.Interfaces.Repositories;
 public interface IDashboardRepository
 {
     Task<DashboardDto> GetDashboardAsync();
+
+    Task<UserDashboardDto> GetUserDashboardAsync(string userId);
 }
