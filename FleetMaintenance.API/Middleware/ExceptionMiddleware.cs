@@ -29,6 +29,13 @@ public class ExceptionMiddleware
                 StatusCodes.Status404NotFound,
                 exception.Message);
         }
+        catch (BadRequestException exception)
+        {
+            await WriteErrorResponseAsync(
+                context,
+                StatusCodes.Status400BadRequest,
+                exception.Message);
+        }
         catch (ConflictException exception)
         {
             await WriteErrorResponseAsync(

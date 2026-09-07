@@ -106,6 +106,7 @@ builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 
 // Cotrollers
 builder.Services.AddControllers()
