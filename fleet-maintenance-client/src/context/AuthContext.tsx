@@ -23,6 +23,12 @@ interface AuthContextValue {
 ) => Promise<AuthUser>;
 
   logout: () => void;
+
+  updateUser: (
+  updates: Partial<
+    Pick<AuthUser, "fullName" | "email">
+  >,
+) => void;
 }
 
 interface AuthProviderProps {
@@ -150,26 +156,65 @@ return authenticatedUser;
     setUser(null);
   }, []);
 
+  const updateUser = useCallback(
+  (
+    updates: Partial<
+      Pick<
+        AuthUser,
+        "fullName" | "email"
+      >
+    >,
+  ) => {
+    setUser((currentUser) => {
+      if (!currentUser) {
+        return null;
+      }
+
+      const updatedUser: AuthUser = {
+        ...currentUser,
+        ...updates,
+      };
+
+      localStorage.setItem(
+        STORAGE_KEYS.USER,
+        JSON.stringify(updatedUser),
+      );
+
+      return updatedUser;
+    });
+  },
+  [],
+);
+
   const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
+  () => ({
+    user,
 
-      isAuthenticated:
-        user !== null &&
-        Boolean(
-          localStorage.getItem(
-            STORAGE_KEYS.ACCESS_TOKEN,
-          ),
+    isAuthenticated:
+      user !== null &&
+      Boolean(
+        localStorage.getItem(
+          STORAGE_KEYS.ACCESS_TOKEN,
         ),
+      ),
 
-      isAdmin: user?.role === "Admin",
+    isAdmin:
+      user?.role === "Admin",
 
-      login,
-      register,
-      logout,
-    }),
-    [user, login, logout],
-  );
+    login,
+    register,
+    logout,
+    updateUser,
+  }),
+
+  [
+    user,
+    login,
+    register,
+    logout,
+    updateUser,
+  ],
+);
 
   return (
     <AuthContext.Provider value={value}>

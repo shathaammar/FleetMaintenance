@@ -50,7 +50,7 @@ const pageTitles: Record<
     "Maintenance Requests",
 
   "/admin/settings":
-    "Settings",
+    "Account Settings",
 
   "/user/dashboard":
     "My Dashboard",
@@ -65,7 +65,7 @@ const pageTitles: Record<
     "Maintenance Requests",
 
   "/user/settings":
-    "Settings",
+    "Account Settings",
 };
 
 export function DashboardLayout({

@@ -16,6 +16,7 @@ import { UserCreateMaintenanceRequestPage } from "../pages/user/UserCreateMainte
 import { UserDashboardPage } from "../pages/user/UserDashboardPage";
 import { UserMaintenanceRequestsPage } from "../pages/user/UserMaintenanceRequestsPage";
 import { UserVehiclesPage } from "../pages/user/UserVehiclesPage";
+import { SettingsPage } from "../pages/shared/SettingsPage";
 
 export function AppRoutes() {
   return (
@@ -104,7 +105,7 @@ export function AppRoutes() {
           <Route
             path={ROUTES.ADMIN.SETTINGS}
             element={
-              <PlaceholderPage title="Settings" />
+              <SettingsPage />
             }
           />
         </Route>
@@ -163,7 +164,7 @@ export function AppRoutes() {
           <Route
             path={ROUTES.USER.SETTINGS}
             element={
-              <PlaceholderPage title="Settings" />
+              <SettingsPage />
             }
           />
         </Route>
