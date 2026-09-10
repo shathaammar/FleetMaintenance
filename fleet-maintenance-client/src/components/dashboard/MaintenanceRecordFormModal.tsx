@@ -8,19 +8,30 @@ import {
 import {
   useEffect,
   useState,
-} from "react";
-
-import type {
-  FormEvent,
-  ReactNode,
+  type FormEvent,
+  type ReactNode,
 } from "react";
 
 import toast from "react-hot-toast";
+
 import { maintenanceRecordService } from "../../services/maintenanceRecordService";
-import type { MaintenanceRecord, } from "../../types/maintenanceRecord";
-import type { MaintenanceType, } from "../../types/maintenanceType";
-import type { Vehicle, } from "../../types/vehicle";
+import { vehicleService } from "../../services/vehicleService";
+
+import type {
+  MaintenanceRecord,
+} from "../../types/maintenanceRecord";
+
+import type {
+  MaintenanceType,
+} from "../../types/maintenanceType";
+
+import type {
+  Vehicle,
+} from "../../types/vehicle";
+
 import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
+
+import { ActiveVehicleSearchSelect } from "./ActiveVehicleSearchSelect";
 
 type FormMode = "create" | "edit";
 
@@ -28,7 +39,6 @@ interface MaintenanceRecordFormModalProps {
   isOpen: boolean;
   mode: FormMode;
   record: MaintenanceRecord | null;
-  vehicles: Vehicle[];
   maintenanceTypes: MaintenanceType[];
   onClose: () => void;
   onSaved: () => void;
@@ -96,7 +106,9 @@ function getMinimumDate() {
   return `${year}-${month}-${day}`;
 }
 
-function toApiDate(value: string) {
+function toApiDate(
+  value: string,
+) {
   return `${value}T00:00:00.000Z`;
 }
 
@@ -104,7 +116,6 @@ export function MaintenanceRecordFormModal({
   isOpen,
   mode,
   record,
-  vehicles,
   maintenanceTypes,
   onClose,
   onSaved,
@@ -125,6 +136,11 @@ export function MaintenanceRecordFormModal({
     isSubmitting,
     setIsSubmitting,
   ] = useState(false);
+
+  const [
+    selectedVehicle,
+    setSelectedVehicle,
+  ] = useState<Vehicle | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -150,11 +166,58 @@ export function MaintenanceRecordFormModal({
 
         notes: record.notes ?? "",
       });
+
+      setSelectedVehicle(null);
     } else {
       setValues(emptyValues);
+      setSelectedVehicle(null);
     }
 
     setErrors({});
+  }, [
+    isOpen,
+    mode,
+    record,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      mode !== "edit" ||
+      !record
+    ) {
+      return;
+    }
+
+    let isCurrentRequest = true;
+
+    const loadVehicle = async () => {
+      try {
+        const vehicle =
+          await vehicleService
+            .getVehicleById(
+              record.vehicleId,
+            );
+
+        if (isCurrentRequest) {
+          setSelectedVehicle(vehicle);
+        }
+      } catch (error) {
+        if (isCurrentRequest) {
+          setSelectedVehicle(null);
+
+          toast.error(
+            getApiErrorMessage(error),
+          );
+        }
+      }
+    };
+
+    void loadVehicle();
+
+    return () => {
+      isCurrentRequest = false;
+    };
   }, [
     isOpen,
     mode,
@@ -197,13 +260,6 @@ export function MaintenanceRecordFormModal({
   if (!isOpen) {
     return null;
   }
-
-  const selectedVehicle =
-    vehicles.find(
-      (vehicle) =>
-        vehicle.id ===
-        Number(values.vehicleId),
-    );
 
   const updateValue = (
     field: keyof FormValues,
@@ -282,7 +338,7 @@ export function MaintenanceRecordFormModal({
   };
 
   const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>
+    event: FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 
@@ -379,7 +435,7 @@ export function MaintenanceRecordFormModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="maintenance-form-title"
-        className="relative my-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-border-dark bg-surface shadow-2xl shadow-black/40"
+        className="relative my-auto w-full max-w-2xl overflow-visible rounded-3xl border border-border-dark bg-surface shadow-2xl shadow-black/40"
       >
         <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-primary/10 blur-3xl" />
 
@@ -403,7 +459,7 @@ export function MaintenanceRecordFormModal({
 
               <p className="mt-1 text-xs leading-5 text-text-muted">
                 {mode === "create"
-                  ? "Create a planned maintenance record for a fleet vehicle."
+                  ? "Create a planned maintenance record for an active fleet vehicle."
                   : "Update this scheduled maintenance record."}
               </p>
             </div>
@@ -431,39 +487,26 @@ export function MaintenanceRecordFormModal({
                 error={errors.vehicleId}
                 required
               >
-                <select
-                  value={values.vehicleId}
-                  onChange={(event) =>
+                <ActiveVehicleSearchSelect
+                  value={selectedVehicle}
+                  disabled={isSubmitting}
+                  hasError={Boolean(
+                    errors.vehicleId,
+                  )}
+                  onChange={(
+                    vehicle: Vehicle | null,
+                  ) => {
+                    setSelectedVehicle(
+                      vehicle,
+                    );
+
                     updateValue(
                       "vehicleId",
-                      event.target.value,
-                    )
-                  }
-                  className={getInputClass(
-                    Boolean(
-                      errors.vehicleId,
-                    ),
-                  )}
-                >
-                  <option value="">
-                    Select vehicle
-                  </option>
-
-                  {vehicles.map(
-                    (vehicle) => (
-                      <option
-                        key={vehicle.id}
-                        value={vehicle.id}
-                      >
-                        {
-                          vehicle.plateNumber
-                        }{" "}
-                        — {vehicle.make}{" "}
-                        {vehicle.model}
-                      </option>
-                    ),
-                  )}
-                </select>
+                      vehicle?.id.toString() ??
+                        "",
+                    );
+                  }}
+                />
               </FormField>
             ) : (
               <FormField label="Vehicle">
@@ -484,6 +527,7 @@ export function MaintenanceRecordFormModal({
                 value={
                   values.maintenanceTypeId
                 }
+                disabled={isSubmitting}
                 onChange={(event) =>
                   updateValue(
                     "maintenanceTypeId",
@@ -532,6 +576,7 @@ export function MaintenanceRecordFormModal({
                   value={
                     values.scheduledDate
                   }
+                  disabled={isSubmitting}
                   onChange={(event) =>
                     updateValue(
                       "scheduledDate",
@@ -572,6 +617,7 @@ export function MaintenanceRecordFormModal({
                   value={
                     values.dueMileage
                   }
+                  disabled={isSubmitting}
                   onChange={(event) =>
                     updateValue(
                       "dueMileage",
@@ -598,6 +644,7 @@ export function MaintenanceRecordFormModal({
                   rows={4}
                   maxLength={1000}
                   value={values.notes}
+                  disabled={isSubmitting}
                   onChange={(event) =>
                     updateValue(
                       "notes",
@@ -613,7 +660,7 @@ export function MaintenanceRecordFormModal({
             </div>
           </div>
 
-          <footer className="flex flex-col-reverse gap-3 border-t border-border-dark bg-background/20 p-5 sm:flex-row sm:justify-end sm:p-6">
+          <footer className="flex flex-col-reverse gap-3 rounded-b-3xl border-t border-border-dark bg-background/20 p-5 sm:flex-row sm:justify-end sm:p-6">
             <button
               type="button"
               onClick={onClose}
@@ -634,14 +681,13 @@ export function MaintenanceRecordFormModal({
                     size={17}
                     className="animate-spin"
                   />
+
                   Saving...
                 </>
+              ) : mode === "create" ? (
+                "Schedule Maintenance"
               ) : (
-                <>
-                  {mode === "create"
-                    ? "Schedule Maintenance"
-                    : "Save Changes"}
-                </>
+                "Save Changes"
               )}
             </button>
           </footer>
@@ -667,7 +713,7 @@ function FormField({
   children,
 }: FormFieldProps) {
   return (
-    <label className="block">
+    <div className="block">
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="text-xs font-bold text-text-main">
           {label}
@@ -693,14 +739,14 @@ function FormField({
           {error}
         </p>
       )}
-    </label>
+    </div>
   );
 }
 
 function getInputClass(
   hasError: boolean,
 ) {
-  return `h-11 w-full rounded-xl border bg-background/60 px-3 text-sm text-text-main outline-none transition placeholder:text-text-muted/50 ${
+  return `h-11 w-full rounded-xl border bg-background/60 px-3 text-sm text-text-main outline-none transition placeholder:text-text-muted/50 disabled:cursor-not-allowed disabled:opacity-50 ${
     hasError
       ? "border-danger/60 focus:ring-4 focus:ring-danger/10"
       : "border-border-dark focus:border-primary/50 focus:ring-4 focus:ring-primary/5"

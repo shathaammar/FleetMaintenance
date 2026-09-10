@@ -52,7 +52,7 @@ public class VehiclesController : ControllerBase
         });
     }
 
-    [Authorize(Roles = AppRoles.User)]
+    [Authorize(Roles = AppRoles.Admin + "," + AppRoles.User)]
     [HttpGet("available")]
     public async Task<ActionResult<ApiResponse<PagedResult<VehicleDto>>>> GetAvailable([FromQuery] VehicleFilterDto filter)
     {

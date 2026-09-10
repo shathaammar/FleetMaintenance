@@ -1174,16 +1174,15 @@ const handleRecordSaved = () => {
     </div>
 
     <MaintenanceRecordFormModal
-      isOpen={isFormOpen}
-      mode={formMode}
-      record={selectedRecord}
-      vehicles={vehicles}
-      maintenanceTypes={
-        maintenanceTypes
-      }
-      onClose={closeFormModal}
-      onSaved={handleRecordSaved}
-    />
+  isOpen={isFormOpen}
+  mode={formMode}
+  record={selectedRecord}
+  maintenanceTypes={
+    maintenanceTypes
+  }
+  onClose={closeFormModal}
+  onSaved={handleRecordSaved}
+/>
 
     <CompleteMaintenanceModal
         isOpen={isCompleteOpen}
