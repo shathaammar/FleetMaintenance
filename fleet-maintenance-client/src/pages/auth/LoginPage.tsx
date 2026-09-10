@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 import { Link, useNavigate, } from "react-router-dom";
 import { z, } from "zod";
 
-import fleetNovaLogo from "../../assets/FleetNove-Logo.png";
+import fleetNovaLogo from "../../assets/FleetNova-Logo.png";
 import loginHero from "../../assets/login-hero.png";
 import { ROUTES, } from "../../constants/routes";
 import { useAuth, } from "../../hooks/useAuth";

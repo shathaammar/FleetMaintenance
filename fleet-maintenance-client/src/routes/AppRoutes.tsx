@@ -1,33 +1,34 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { PlaceholderPage } from "../components/common/PlaceholderPage";
 import { ROUTES } from "../constants/routes";
 import { DashboardLayout } from "../layouts/DashboardLayout";
-import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage";
-import { LoginPage } from "../pages/auth/LoginPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicOnlyRoute } from "./PublicOnlyRoute";
-import { AdminVehiclesPage } from "../pages/admin/AdminVehiclesPage";
-import { RegisterPage } from "../pages/auth/RegisterPage";
-import { AdminMaintenanceTypesPage, } from "../pages/admin/AdminMaintenanceTypesPage";
-import { AdminMaintenanceRecordsPage } from "../pages/admin/AdminMaintenanceRecordsPage";
-import { AdminMaintenanceRequestsPage } from "../pages/admin/AdminMaintenanceRequestsPage";
-import { UserCreateMaintenanceRequestPage } from "../pages/user/UserCreateMaintenanceRequestPage";
-import { UserDashboardPage } from "../pages/user/UserDashboardPage";
-import { UserMaintenanceRequestsPage } from "../pages/user/UserMaintenanceRequestsPage";
-import { UserVehiclesPage } from "../pages/user/UserVehiclesPage";
-import { SettingsPage } from "../pages/shared/SettingsPage";
+import { LandingPage } from "../pages/public/LandingPage";
+
+const AdminDashboardPage = lazy(() => import("../pages/admin/AdminDashboardPage").then(({ AdminDashboardPage }) => ({ default: AdminDashboardPage })));
+const AdminMaintenanceRecordsPage = lazy(() => import("../pages/admin/AdminMaintenanceRecordsPage").then(({ AdminMaintenanceRecordsPage }) => ({ default: AdminMaintenanceRecordsPage })));
+const AdminMaintenanceRequestsPage = lazy(() => import("../pages/admin/AdminMaintenanceRequestsPage").then(({ AdminMaintenanceRequestsPage }) => ({ default: AdminMaintenanceRequestsPage })));
+const AdminMaintenanceTypesPage = lazy(() => import("../pages/admin/AdminMaintenanceTypesPage").then(({ AdminMaintenanceTypesPage }) => ({ default: AdminMaintenanceTypesPage })));
+const AdminVehiclesPage = lazy(() => import("../pages/admin/AdminVehiclesPage").then(({ AdminVehiclesPage }) => ({ default: AdminVehiclesPage })));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage").then(({ LoginPage }) => ({ default: LoginPage })));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage").then(({ RegisterPage }) => ({ default: RegisterPage })));
+const SettingsPage = lazy(() => import("../pages/shared/SettingsPage").then(({ SettingsPage }) => ({ default: SettingsPage })));
+const UserCreateMaintenanceRequestPage = lazy(() => import("../pages/user/UserCreateMaintenanceRequestPage").then(({ UserCreateMaintenanceRequestPage }) => ({ default: UserCreateMaintenanceRequestPage })));
+const UserDashboardPage = lazy(() => import("../pages/user/UserDashboardPage").then(({ UserDashboardPage }) => ({ default: UserDashboardPage })));
+const UserMaintenanceRequestsPage = lazy(() => import("../pages/user/UserMaintenanceRequestsPage").then(({ UserMaintenanceRequestsPage }) => ({ default: UserMaintenanceRequestsPage })));
+const UserVehiclesPage = lazy(() => import("../pages/user/UserVehiclesPage").then(({ UserVehiclesPage }) => ({ default: UserVehiclesPage })));
 
 export function AppRoutes() {
   return (
-    <Routes>
+    <Suspense fallback={null}>
+      <Routes>
       <Route
         path={ROUTES.HOME}
         element={
-          <PlaceholderPage
-            title="FleetNova"
-            description="Smart fleet maintenance and management."
-          />
+          <LandingPage />
         }
       />
 
@@ -189,6 +190,7 @@ export function AppRoutes() {
           />
         }
       />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

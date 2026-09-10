@@ -22,7 +22,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import FleetNoveLogo from "../../assets/FleetNove-Logo.png";
+import FleetNovaLogo from "../../assets/FleetNova-Logo.png";
 import {
   ROUTES,
 } from "../../constants/routes";
@@ -172,7 +172,7 @@ export function DashboardSidebar({
         >
           <div className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-primary/20 bg-surface-light shadow-[0_8px_30px_rgba(245,166,35,0.18)]">
             <img
-              src={FleetNoveLogo}
+              src={FleetNovaLogo}
               alt="FleetNova logo"
               className="size-full object-contain p-1.5"
             />
