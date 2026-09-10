@@ -133,28 +133,47 @@ const [
 ] = useState(false);
 
   const loadRequests =
-    useCallback(async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage(null);
+  useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
 
-        const result =
-          await maintenanceRequestService
-            .getMyRequests(filters);
+      const result =
+        await maintenanceRequestService
+          .getMyRequests(filters);
 
-        setRequests(result.items);
-        setTotalCount(result.totalCount);
-        setTotalPages(result.totalPages);
-      } catch (error) {
-        setRequests([]);
+      const lastAvailablePage = Math.max(
+        result.totalPages,
+        1,
+      );
 
-        setErrorMessage(
-          getApiErrorMessage(error),
-        );
-      } finally {
-        setIsLoading(false);
+      if (
+        filters.pageNumber >
+        lastAvailablePage
+      ) {
+        setFilters((current) => ({
+          ...current,
+          pageNumber: lastAvailablePage,
+        }));
+
+        return;
       }
-    }, [filters]);
+
+      setRequests(result.items);
+      setTotalCount(result.totalCount);
+      setTotalPages(result.totalPages);
+    } catch (error) {
+      setRequests([]);
+      setTotalCount(0);
+      setTotalPages(0);
+
+      setErrorMessage(
+        getApiErrorMessage(error),
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
 
   useEffect(() => {
     void loadRequests();
@@ -200,21 +219,34 @@ const [
   };
 
   const goToPage = () => {
-    const requestedPage = Number(pageInput);
-    const lastPage = Math.max(totalPages, 1);
-    const nextPage =
-      Number.isInteger(requestedPage) &&
-      requestedPage >= 1 &&
-      requestedPage <= lastPage
-        ? requestedPage
-        : 1;
+  const requestedPage =
+    Number.parseInt(pageInput, 10);
 
-    setFilters((current) => ({
-      ...current,
-      pageNumber: nextPage,
-    }));
-    setPageInput(String(nextPage));
-  };
+  const lastPage = Math.max(
+    totalPages,
+    1,
+  );
+
+  if (Number.isNaN(requestedPage)) {
+    setPageInput(
+      String(filters.pageNumber),
+    );
+
+    return;
+  }
+
+  const nextPage = Math.min(
+    Math.max(requestedPage, 1),
+    lastPage,
+  );
+
+  setFilters((current) => ({
+    ...current,
+    pageNumber: nextPage,
+  }));
+
+  setPageInput(String(nextPage));
+};
 
   const openDetails = (
     request: MaintenanceRequest,
