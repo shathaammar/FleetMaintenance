@@ -23,7 +23,7 @@ const UserVehiclesPage = lazy(() => import("../pages/user/UserVehiclesPage").the
 
 export function AppRoutes() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageLoadingFallback />}>
       <Routes>
       <Route
         path={ROUTES.HOME}
@@ -33,16 +33,16 @@ export function AppRoutes() {
       />
 
       <Route element={<PublicOnlyRoute />}>
-        <Route
-          path={ROUTES.LOGIN}
-          element={<LoginPage />}
-        />
-      </Route>
+      <Route
+        path={ROUTES.LOGIN}
+        element={<LoginPage />}
+      />
 
       <Route
         path={ROUTES.REGISTER}
         element={<RegisterPage />}
       />
+    </Route>
 
       <Route
         element={
@@ -193,4 +193,22 @@ export function AppRoutes() {
       </Routes>
     </Suspense>
   );
+
+  function PageLoadingFallback() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-5">
+      <div
+        className="flex flex-col items-center gap-4"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="size-10 animate-spin rounded-full border-4 border-border-dark border-t-primary" />
+
+        <p className="text-sm font-semibold text-text-muted">
+          Loading FleetNova...
+        </p>
+      </div>
+    </div>
+  );
+}
 }

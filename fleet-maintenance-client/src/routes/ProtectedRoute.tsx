@@ -28,8 +28,11 @@ export function ProtectedRoute({
         to={ROUTES.LOGIN}
         replace
         state={{
-          from: location.pathname,
-        }}
+        from:
+          location.pathname +
+          location.search +
+          location.hash,
+      }}
       />
     );
   }

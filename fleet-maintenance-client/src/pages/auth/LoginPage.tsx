@@ -10,9 +10,14 @@ import {
 import { useState, } from "react";
 import { useForm, } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Link, useNavigate, } from "react-router-dom";
-import { z, } from "zod";
 
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
+import { z, } from "zod";
 import fleetNovaLogo from "../../assets/FleetNova-Logo.png";
 import loginHero from "../../assets/login-hero.png";
 import { ROUTES, } from "../../constants/routes";
@@ -32,15 +37,11 @@ const loginSchema = z.object({
     ),
 
   password: z
-    .string()
-    .min(
-      1,
-      "Password is required.",
-    )
-    .min(
-      6,
-      "Password must contain at least 6 characters.",
-    ),
+  .string()
+  .min(
+    1,
+    "Password is required.",
+  ),
 });
 
 type LoginFormData = z.infer<
@@ -50,6 +51,15 @@ type LoginFormData = z.infer<
 export function LoginPage() {
   const navigate =
     useNavigate();
+
+    const location = useLocation();
+
+const requestedPath =
+  (
+    location.state as {
+      from?: unknown;
+    } | null
+  )?.from;
 
   const {
     login,
@@ -78,39 +88,42 @@ export function LoginPage() {
   });
 
   const onSubmit = async (
-    data: LoginFormData,
-  ) => {
-    try {
-      const user =
-        await login(data);
+  data: LoginFormData,
+) => {
+  try {
+    const user = await login(data);
 
-      toast.success(
-        `Welcome back, ${user.fullName}!`,
-      );
+    toast.success(
+      `Welcome back, ${user.fullName}!`,
+    );
 
-      if (user.role === "Admin") {
-        navigate(
-          ROUTES.ADMIN.DASHBOARD,
-          {
-            replace: true,
-          },
-        );
+    const defaultDashboard =
+      user.role === "Admin"
+        ? ROUTES.ADMIN.DASHBOARD
+        : ROUTES.USER.DASHBOARD;
 
-        return;
-      }
+    const roleRoot =
+      user.role === "Admin"
+        ? ROUTES.ADMIN.ROOT
+        : ROUTES.USER.ROOT;
 
-      navigate(
-        ROUTES.USER.DASHBOARD,
-        {
-          replace: true,
-        },
-      );
-    } catch (error) {
-      toast.error(
-        getApiErrorMessage(error),
-      );
-    }
-  };
+    const safeRequestedPath =
+      typeof requestedPath === "string" &&
+      requestedPath.startsWith("/") &&
+      !requestedPath.startsWith("//") &&
+      requestedPath.startsWith(roleRoot)
+        ? requestedPath
+        : defaultDashboard;
+
+    navigate(safeRequestedPath, {
+      replace: true,
+    });
+  } catch (error) {
+    toast.error(
+      getApiErrorMessage(error),
+    );
+  }
+};
 
   return (
     <main className="relative min-h-dvh overflow-x-hidden bg-background">

@@ -63,7 +63,7 @@ apiClient.interceptors.response.use(
         ROUTES.LOGIN;
 
       if (!isLoginPage) {
-        window.location.href = ROUTES.LOGIN;
+        window.location.replace(ROUTES.LOGIN);
       }
     }
 
