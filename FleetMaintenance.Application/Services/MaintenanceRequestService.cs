@@ -6,6 +6,7 @@ using FleetMaintenance.Application.Interfaces.Services;
 using FleetMaintenance.Application.Interfaces.UnitOfWork;
 using FleetMaintenance.Domain.Entities;
 using FleetMaintenance.Domain.Enums;
+using FleetMaintenance.Application.DTOs.Profile;
 
 namespace FleetMaintenance.Application.Services;
 
@@ -17,6 +18,7 @@ public class MaintenanceRequestService: IMaintenanceRequestService
     private readonly IMaintenanceRecordRepository _maintenanceRecordRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IProfileService _profileService;
 
     public MaintenanceRequestService(
         IMaintenanceRequestRepository maintenanceRequestRepository,
@@ -24,7 +26,8 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         IGenericRepository<MaintenanceType> maintenanceTypeRepository,
         IMaintenanceRecordRepository maintenanceRecordRepository,
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IProfileService profileService)
     {
         _maintenanceRequestRepository = maintenanceRequestRepository;
         _vehicleRepository = vehicleRepository;
@@ -32,6 +35,7 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         _maintenanceRecordRepository = maintenanceRecordRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _profileService = profileService;
     }
 
     public async Task<MaintenanceRequestDto> GetByIdAsync(int id)
@@ -82,6 +86,8 @@ public class MaintenanceRequestService: IMaintenanceRequestService
     {
         string userId = _currentUserService.UserId;
 
+        ProfileDto currentProfile = await _profileService.GetProfileAsync();
+
         Vehicle? vehicle = await _vehicleRepository.GetByIdAsync(dto.VehicleId);
 
         if (vehicle is null)
@@ -119,8 +125,8 @@ public class MaintenanceRequestService: IMaintenanceRequestService
             VehicleId = dto.VehicleId,
             MaintenanceTypeId = dto.MaintenanceTypeId,
             RequestedByUserId = userId,
-            RequestedByFullName = _currentUserService.FullName,
-            RequestedByEmail = _currentUserService.Email,
+            RequestedByFullName = currentProfile.FullName,
+            RequestedByEmail = currentProfile.Email,
             Description = dto.Description.Trim(),
             PreferredDate = dto.PreferredDate?.Date,
             Status = MaintenanceRequestStatus.Pending,
