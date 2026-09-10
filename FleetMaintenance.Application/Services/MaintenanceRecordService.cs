@@ -84,6 +84,12 @@ public class MaintenanceRecordService
                 $"Vehicle with ID {dto.VehicleId} was not found.");
         }
 
+        if (vehicle.Status != VehicleStatus.Active)
+        {
+            throw new ConflictException(
+                "Maintenance can only be scheduled for an active vehicle.");
+        }
+
         var maintenanceType = await _typeRepository.GetByIdAsync(dto.MaintenanceTypeId);
 
         if (maintenanceType is null)
