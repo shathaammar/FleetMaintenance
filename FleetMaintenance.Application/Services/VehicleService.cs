@@ -13,20 +13,17 @@ public class VehicleService : IVehicleService
 {
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IGenericRepository<Vehicle> _genericRepository;
 
     public VehicleService(IVehicleRepository vehicleRepository,
-        IUnitOfWork unitOfWork,
-        IGenericRepository<Vehicle> genericRepository)
+        IUnitOfWork unitOfWork)
     {
         _vehicleRepository = vehicleRepository;
         _unitOfWork = unitOfWork;
-        _genericRepository = genericRepository;
     }
 
     public async Task<List<VehicleDto>> GetAllAsync()
     {
-        var vehicles = await _genericRepository.GetAllAsync();
+        var vehicles = await _vehicleRepository.GetAllAsync();
 
         return vehicles
             .Select(MapToDto)
@@ -51,7 +48,7 @@ public class VehicleService : IVehicleService
 
     public async Task<VehicleDto> GetByIdAsync(int id)
     {
-        var vehicle = await _genericRepository.GetByIdAsync(id);
+        var vehicle = await _vehicleRepository.GetByIdAsync(id);
 
         if (vehicle is null)
         {
@@ -86,7 +83,7 @@ public class VehicleService : IVehicleService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _genericRepository.AddAsync(vehicle);
+        await _vehicleRepository.AddAsync(vehicle);
         await _unitOfWork.SaveChangesAsync();
 
         return MapToDto(vehicle);
@@ -94,7 +91,7 @@ public class VehicleService : IVehicleService
 
     public async Task<VehicleDto> UpdateAsync(int id, UpdateVehicleDto dto)
     {
-        var vehicle = await _genericRepository.GetByIdAsync(id);
+        var vehicle = await _vehicleRepository.GetByIdAsync(id);
 
         if (vehicle is null)
         {
@@ -146,7 +143,7 @@ public class VehicleService : IVehicleService
             vehicle.Status = dto.Status.Value;
         }
 
-        await _genericRepository.UpdateAsync(vehicle);
+        await _vehicleRepository.UpdateAsync(vehicle);
         await _unitOfWork.SaveChangesAsync();
 
         return MapToDto(vehicle);
@@ -155,7 +152,7 @@ public class VehicleService : IVehicleService
     public async Task DeleteAsync(int id)
     {
         var vehicle =
-            await _genericRepository.GetByIdAsync(id);
+            await _vehicleRepository.GetByIdAsync(id);
 
         if (vehicle is null)
         {
@@ -172,7 +169,7 @@ public class VehicleService : IVehicleService
                 $"Vehicle '{vehicle.PlateNumber}' cannot be deleted because it is linked to maintenance records or requests.");
         }
 
-        await _genericRepository.DeleteAsync(vehicle);
+        await _vehicleRepository.DeleteAsync(vehicle);
 
         await _unitOfWork.SaveChangesAsync();
     }

@@ -1,9 +1,9 @@
 ﻿using FleetMaintenance.Application.Common.Authorization;
+using FleetMaintenance.Application.Common.Extensions;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.MaintenanceRecords;
 using FleetMaintenance.Application.Interfaces.Services;
 using FluentValidation;
-using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -42,7 +42,7 @@ public class MaintenanceRecordsController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var records = await _service.GetPagedAsync(filter);
@@ -94,7 +94,7 @@ public class MaintenanceRecordsController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var record = await _service.CreateAsync(dto);
@@ -121,7 +121,7 @@ public class MaintenanceRecordsController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var record = await _service.UpdateAsync(id, dto);
@@ -143,7 +143,7 @@ public class MaintenanceRecordsController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var record = await _service.CompleteAsync(id, dto);
@@ -180,23 +180,5 @@ public class MaintenanceRecordsController : ControllerBase
             Message = "Maintenance record deleted successfully.",
             Data = null
         });
-    }
-
-    private static ApiResponse<object> CreateValidationResponse(ValidationResult validationResult)
-    {
-        var errors = validationResult.Errors
-            .GroupBy(error => error.PropertyName)
-            .ToDictionary(
-                group => group.Key,
-                group => group
-                    .Select(error => error.ErrorMessage)
-                    .ToArray());
-
-        return new ApiResponse<object>
-        {
-            Success = false,
-            Message = "Validation failed.",
-            Data = errors
-        };
     }
 }

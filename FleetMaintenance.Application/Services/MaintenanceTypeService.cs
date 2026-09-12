@@ -15,20 +15,14 @@ public class MaintenanceTypeService
 
     private readonly IUnitOfWork _unitOfWork;
 
-    private readonly IGenericRepository<MaintenanceType>
-        _genericRepository;
-
     public MaintenanceTypeService(
         IMaintenanceTypeRepository maintenanceTypeRepository,
-        IUnitOfWork unitOfWork,
-        IGenericRepository<MaintenanceType> genericRepository)
+        IUnitOfWork unitOfWork)
     {
         _maintenanceTypeRepository =
             maintenanceTypeRepository;
 
         _unitOfWork = unitOfWork;
-
-        _genericRepository = genericRepository;
     }
 
     public async Task<IEnumerable<MaintenanceTypeDto>>
@@ -46,7 +40,7 @@ public class MaintenanceTypeService
         GetByIdAsync(int id)
     {
         var maintenanceType =
-            await _genericRepository.GetByIdAsync(id);
+            await _maintenanceTypeRepository.GetByIdAsync(id);
 
         if (maintenanceType is null)
         {
@@ -79,7 +73,7 @@ public class MaintenanceTypeService
                 dto.Description)
         };
 
-        await _genericRepository.AddAsync(
+        await _maintenanceTypeRepository.AddAsync(
             maintenanceType);
 
         await _unitOfWork.SaveChangesAsync();
@@ -93,7 +87,7 @@ public class MaintenanceTypeService
             UpdateMaintenanceTypeDto dto)
     {
         var maintenanceType =
-            await _genericRepository.GetByIdAsync(id);
+            await _maintenanceTypeRepository.GetByIdAsync(id);
 
         if (maintenanceType is null)
         {
@@ -126,7 +120,7 @@ public class MaintenanceTypeService
                 NormalizeDescription(dto.Description);
         }
 
-        await _genericRepository.UpdateAsync(
+        await _maintenanceTypeRepository.UpdateAsync(
             maintenanceType);
 
         await _unitOfWork.SaveChangesAsync();
@@ -137,7 +131,7 @@ public class MaintenanceTypeService
     public async Task DeleteAsync(int id)
     {
         var maintenanceType =
-            await _genericRepository.GetByIdAsync(id);
+            await _maintenanceTypeRepository.GetByIdAsync(id);
 
         if (maintenanceType is null)
         {
@@ -155,7 +149,7 @@ public class MaintenanceTypeService
                 $"Maintenance type '{maintenanceType.Name}' cannot be deleted because it is used by maintenance records or requests.");
         }
 
-        await _genericRepository.DeleteAsync(
+        await _maintenanceTypeRepository.DeleteAsync(
             maintenanceType);
 
         await _unitOfWork.SaveChangesAsync();

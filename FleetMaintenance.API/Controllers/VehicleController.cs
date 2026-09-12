@@ -1,4 +1,5 @@
 ﻿using FleetMaintenance.Application.Common.Authorization;
+using FleetMaintenance.Application.Common.Extensions;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Services;
@@ -39,7 +40,7 @@ public class VehiclesController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var vehicles = await _vehicleService.GetPagedAsync(filter);
@@ -62,7 +63,7 @@ public class VehiclesController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(CreateValidationResponse(validationResult));
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var vehicles = await _vehicleService.GetPagedAsync(filter);
@@ -77,8 +78,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<
-        ActionResult<ApiResponse<VehicleDto>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<VehicleDto>>> GetById(int id)
     {
         var vehicle = await _vehicleService.GetByIdAsync(id);
 
@@ -92,9 +92,7 @@ public class VehiclesController : ControllerBase
 
     [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
-    public async Task<
-        ActionResult<ApiResponse<VehicleDto>>> Create(
-        CreateVehicleDto dto)
+    public async Task<ActionResult<ApiResponse<VehicleDto>>> Create(CreateVehicleDto dto)
     {
         var validationResult =
             await _createValidator.ValidateAsync(dto);
@@ -102,7 +100,7 @@ public class VehiclesController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var vehicle = await _vehicleService.CreateAsync(dto);
@@ -122,10 +120,7 @@ public class VehiclesController : ControllerBase
 
     [Authorize(Roles = AppRoles.Admin)]
     [HttpPatch("{id:int}")]
-    public async Task<
-        ActionResult<ApiResponse<VehicleDto>>> Update(
-        int id,
-        UpdateVehicleDto dto)
+    public async Task<ActionResult<ApiResponse<VehicleDto>>> Update(int id, UpdateVehicleDto dto)
     {
         var validationResult =
             await _updateValidator.ValidateAsync(dto);
@@ -133,7 +128,7 @@ public class VehiclesController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var vehicle = await _vehicleService.UpdateAsync(id, dto);
@@ -148,8 +143,7 @@ public class VehiclesController : ControllerBase
 
     [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{id:int}")]
-    public async Task<
-        ActionResult<ApiResponse<object>>> Delete(int id)
+    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
     {
         await _vehicleService.DeleteAsync(id);
 
@@ -159,24 +153,5 @@ public class VehiclesController : ControllerBase
             Message = "Vehicle deleted successfully.",
             Data = null
         });
-    }
-
-    private static ApiResponse<object> CreateValidationResponse(
-        FluentValidation.Results.ValidationResult validationResult)
-    {
-        var errors = validationResult.Errors
-            .GroupBy(error => error.PropertyName)
-            .ToDictionary(
-                group => group.Key,
-                group => group
-                    .Select(error => error.ErrorMessage)
-                    .ToArray());
-
-        return new ApiResponse<object>
-        {
-            Success = false,
-            Message = "Validation failed.",
-            Data = errors
-        };
     }
 }

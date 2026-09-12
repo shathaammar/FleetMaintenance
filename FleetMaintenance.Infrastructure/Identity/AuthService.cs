@@ -10,15 +10,18 @@ namespace FleetMaintenance.Infrastructure.Identity;
 public class AuthService : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITokenService _tokenService;
     private readonly ApplicationDbContext _dbContext;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
         ITokenService tokenService,
         ApplicationDbContext dbContext)
     {
         _userManager = userManager;
+        _signInManager = signInManager;
         _tokenService = tokenService;
         _dbContext = dbContext;
     }
@@ -107,12 +110,19 @@ public class AuthService : IAuthService
                 "Invalid email or password.");
         }
 
-        bool passwordIsValid =
-            await _userManager.CheckPasswordAsync(
+        SignInResult signInResult =
+            await _signInManager.CheckPasswordSignInAsync(
                 user,
-                dto.Password);
+                dto.Password,
+                lockoutOnFailure: true);
 
-        if (!passwordIsValid)
+        if (signInResult.IsLockedOut)
+        {
+            throw new UnauthorizedException(
+                "This account has been temporarily locked due to multiple failed login attempts. Please try again later.");
+        }
+
+        if (!signInResult.Succeeded)
         {
             throw new UnauthorizedException(
                 "Invalid email or password.");

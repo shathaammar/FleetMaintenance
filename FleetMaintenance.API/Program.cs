@@ -40,6 +40,13 @@ builder.Services
         options.Password.RequireLowercase = true;
         options.Password.RequireDigit = true;
         options.Password.RequireNonAlphanumeric = false;
+
+        // Account lockout (brute-force protection).
+        // Applied automatically to every user created via UserManager.CreateAsync,
+        // because AllowedForNewUsers = true sets LockoutEnabled = true at creation time.
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -111,7 +118,7 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 // Cotrollers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
-    { 
+    {
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter());
     });
@@ -149,11 +156,9 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
-builder.Services.AddValidatorsFromAssemblyContaining<
-    CreateVehicleDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleDtoValidator>();
 
-builder.Services.AddValidatorsFromAssemblyContaining<
-    CreateMaintenanceTypeDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateMaintenanceTypeDtoValidator>();
 
 string[] allowedOrigins =
     builder.Configuration

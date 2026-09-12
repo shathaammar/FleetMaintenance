@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FleetMaintenance.Infrastructure.Repositories;
 
-public class MaintenanceRequestRepository: GenericRepository<MaintenanceRequest>, IMaintenanceRequestRepository
+public class MaintenanceRequestRepository : GenericRepository<MaintenanceRequest>, IMaintenanceRequestRepository
 {
     public MaintenanceRequestRepository(
         ApplicationDbContext context)
@@ -47,6 +47,13 @@ public class MaintenanceRequestRepository: GenericRepository<MaintenanceRequest>
             filter);
     }
 
+    public async Task<MaintenanceRequest?> GetByMaintenanceRecordIdAsync(int maintenanceRecordId)
+    {
+        return await Context.MaintenanceRequests
+            .FirstOrDefaultAsync(request =>
+                request.MaintenanceRecordId == maintenanceRecordId);
+    }
+
     private IQueryable<MaintenanceRequest> CreateDetailsQuery()
     {
         return Context.MaintenanceRequests
@@ -63,7 +70,7 @@ public class MaintenanceRequestRepository: GenericRepository<MaintenanceRequest>
 
             query = query.Where(request => request.Vehicle.PlateNumber.Contains(search) ||
             request.MaintenanceType.Name.Contains(search) ||
-            request.Description.Contains(search) || 
+            request.Description.Contains(search) ||
             request.RequestedByFullName.Contains(search) ||
             request.RequestedByEmail.Contains(search));
         }

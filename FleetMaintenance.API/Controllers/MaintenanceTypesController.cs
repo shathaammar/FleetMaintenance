@@ -1,4 +1,5 @@
 ﻿using FleetMaintenance.Application.Common.Authorization;
+using FleetMaintenance.Application.Common.Extensions;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.MaintenanceTypes;
 using FleetMaintenance.Application.Interfaces.Services;
@@ -27,8 +28,7 @@ public class MaintenanceTypesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<
-        ActionResult<ApiResponse<List<MaintenanceTypeDto>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<List<MaintenanceTypeDto>>>> GetAll()
     {
         var maintenanceTypes = await _service.GetAllAsync();
 
@@ -41,8 +41,7 @@ public class MaintenanceTypesController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<
-        ActionResult<ApiResponse<MaintenanceTypeDto>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<MaintenanceTypeDto>>> GetById(int id)
     {
         var maintenanceType = await _service.GetByIdAsync(id);
 
@@ -56,16 +55,14 @@ public class MaintenanceTypesController : ControllerBase
 
     [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
-    public async Task<
-        ActionResult<ApiResponse<MaintenanceTypeDto>>> Create(
-        CreateMaintenanceTypeDto dto)
+    public async Task<ActionResult<ApiResponse<MaintenanceTypeDto>>> Create(CreateMaintenanceTypeDto dto)
     {
         var validationResult =
             await _createValidator.ValidateAsync(dto);
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(CreateValidationResponse(validationResult));
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var maintenanceType = await _service.CreateAsync(dto);
@@ -85,17 +82,14 @@ public class MaintenanceTypesController : ControllerBase
 
     [Authorize(Roles = AppRoles.Admin)]
     [HttpPatch("{id:int}")]
-    public async Task<
-        ActionResult<ApiResponse<MaintenanceTypeDto>>> Update(
-        int id,
-        UpdateMaintenanceTypeDto dto)
+    public async Task<ActionResult<ApiResponse<MaintenanceTypeDto>>> Update(int id, UpdateMaintenanceTypeDto dto)
     {
         var validationResult =
             await _updateValidator.ValidateAsync(dto);
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(CreateValidationResponse(validationResult));
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var maintenanceType = await _service.UpdateAsync(id, dto);
@@ -120,24 +114,5 @@ public class MaintenanceTypesController : ControllerBase
             Message = "Maintenance type deleted successfully.",
             Data = null
         });
-    }
-
-    private static ApiResponse<object> CreateValidationResponse(
-        FluentValidation.Results.ValidationResult validationResult)
-    {
-        var errors = validationResult.Errors
-            .GroupBy(error => error.PropertyName)
-            .ToDictionary(
-                group => group.Key,
-                group => group
-                    .Select(error => error.ErrorMessage)
-                    .ToArray());
-
-        return new ApiResponse<object>
-        {
-            Success = false,
-            Message = "Validation failed.",
-            Data = errors
-        };
     }
 }

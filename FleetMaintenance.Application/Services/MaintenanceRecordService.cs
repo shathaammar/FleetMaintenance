@@ -15,17 +15,20 @@ public class MaintenanceRecordService
     private readonly IMaintenanceRecordRepository _recordRepository;
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IMaintenanceTypeRepository _typeRepository;
+    private readonly IMaintenanceRequestRepository _requestRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public MaintenanceRecordService(
         IMaintenanceRecordRepository recordRepository,
         IVehicleRepository vehicleRepository,
         IMaintenanceTypeRepository typeRepository,
+        IMaintenanceRequestRepository requestRepository,
         IUnitOfWork unitOfWork)
     {
         _recordRepository = recordRepository;
         _vehicleRepository = vehicleRepository;
         _typeRepository = typeRepository;
+        _requestRepository = requestRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -99,8 +102,7 @@ public class MaintenanceRecordService
         }
 
         if (dto.DueMileage.HasValue &&
-            dto.DueMileage.Value <
-                vehicle.CurrentMileage)
+            dto.DueMileage.Value < vehicle.CurrentMileage)
         {
             throw new ConflictException(
                 $"Due mileage cannot be less than the vehicle's current mileage of {vehicle.CurrentMileage}.");
@@ -166,8 +168,7 @@ public class MaintenanceRecordService
                     $"Vehicle with ID {record.VehicleId} was not found.");
             }
 
-            if (dto.DueMileage.Value <
-                vehicle.CurrentMileage)
+            if (dto.DueMileage.Value < vehicle.CurrentMileage)
             {
                 throw new ConflictException(
                     $"Due mileage cannot be less than the vehicle's current mileage of {vehicle.CurrentMileage}.");
@@ -189,7 +190,7 @@ public class MaintenanceRecordService
 
         if (dto.MaintenanceTypeId.HasValue)
         {
-            record.MaintenanceTypeId =  dto.MaintenanceTypeId.Value;
+            record.MaintenanceTypeId = dto.MaintenanceTypeId.Value;
         }
 
         if (dto.ScheduledDate.HasValue)
@@ -260,6 +261,18 @@ public class MaintenanceRecordService
         record.Status = MaintenanceStatus.Cancelled;
 
         await _recordRepository.UpdateAsync(record);
+
+        var linkedRequest =
+            await _requestRepository.GetByMaintenanceRecordIdAsync(id);
+
+        if (linkedRequest is not null &&
+            linkedRequest.Status == MaintenanceRequestStatus.Approved)
+        {
+            linkedRequest.Status = MaintenanceRequestStatus.Cancelled;
+
+            await _requestRepository.UpdateAsync(linkedRequest);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
         return await GetSavedRecordAsync(record.Id);

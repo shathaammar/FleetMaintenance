@@ -10,7 +10,7 @@ using FleetMaintenance.Application.DTOs.Profile;
 
 namespace FleetMaintenance.Application.Services;
 
-public class MaintenanceRequestService: IMaintenanceRequestService
+public class MaintenanceRequestService : IMaintenanceRequestService
 {
     private readonly IMaintenanceRequestRepository _maintenanceRequestRepository;
     private readonly IGenericRepository<Vehicle> _vehicleRepository;
@@ -51,7 +51,7 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         return MapToDto(request);
     }
 
-    public async Task<MaintenanceRequestDto>  GetMyRequestByIdAsync(int id)
+    public async Task<MaintenanceRequestDto> GetMyRequestByIdAsync(int id)
     {
         string userId = _currentUserService.UserId;
 
@@ -164,7 +164,13 @@ public class MaintenanceRequestService: IMaintenanceRequestService
                 $"Vehicle with ID {request.VehicleId} was not found.");
         }
 
-        if (dto.DueMileage.HasValue && dto.DueMileage.Value <vehicle.CurrentMileage)
+        if (vehicle.Status != VehicleStatus.Active)
+        {
+            throw new ConflictException(
+                "Maintenance requests can only be approved for an active vehicle.");
+        }
+
+        if (dto.DueMileage.HasValue && dto.DueMileage.Value < vehicle.CurrentMileage)
         {
             throw new ConflictException(
                 $"Due mileage cannot be less than the vehicle's current mileage of {vehicle.CurrentMileage}.");
@@ -183,17 +189,17 @@ public class MaintenanceRequestService: IMaintenanceRequestService
         }
 
         var maintenanceRecord = new MaintenanceRecord
-            {
-                VehicleId = request.VehicleId,
-                MaintenanceTypeId = request.MaintenanceTypeId,
-                ScheduledDate = dto.ScheduledDate.Date,
-                DueMileage = dto.DueMileage,
-                Notes = string.IsNullOrWhiteSpace(dto.Notes)
+        {
+            VehicleId = request.VehicleId,
+            MaintenanceTypeId = request.MaintenanceTypeId,
+            ScheduledDate = dto.ScheduledDate.Date,
+            DueMileage = dto.DueMileage,
+            Notes = string.IsNullOrWhiteSpace(dto.Notes)
                         ? request.Description
                         : dto.Notes.Trim(),
-                Status = MaintenanceStatus.Scheduled,
-                CreatedAt = DateTime.UtcNow
-            };
+            Status = MaintenanceStatus.Scheduled,
+            CreatedAt = DateTime.UtcNow
+        };
 
         request.Status = MaintenanceRequestStatus.Approved;
 

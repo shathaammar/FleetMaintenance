@@ -1,4 +1,5 @@
-﻿using FleetMaintenance.Application.Common.Models;
+﻿using FleetMaintenance.Application.Common.Extensions;
+using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Profile;
 using FleetMaintenance.Application.Interfaces.Services;
 using FluentValidation;
@@ -48,7 +49,7 @@ public class ProfileController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return CreateValidationResponse(validationResult);
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         ProfileDto profile = await _profileService.UpdateProfileAsync(dto);
@@ -69,7 +70,7 @@ public class ProfileController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return CreateValidationResponse(validationResult);
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         await _profileService.ChangePasswordAsync(dto);
@@ -80,27 +81,6 @@ public class ProfileController : ControllerBase
                 Success = true,
                 Message = "Password changed successfully.",
                 Data = null
-            });
-    }
-
-    private BadRequestObjectResult CreateValidationResponse(ValidationResult validationResult)
-    {
-        var errors = validationResult.Errors
-                .GroupBy(error =>
-                    error.PropertyName)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group
-                        .Select(error =>
-                            error.ErrorMessage)
-                        .ToArray());
-
-        return BadRequest(
-            new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Validation failed.",
-                Data = errors
             });
     }
 }

@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using FluentValidation.Results;
+using FleetMaintenance.Application.Common.Extensions;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Auth;
 using FleetMaintenance.Application.Interfaces.Services;
@@ -37,7 +37,7 @@ public class AuthController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var result = await _authService.RegisterAsync(dto);
@@ -62,7 +62,7 @@ public class AuthController : ControllerBase
         if (!validationResult.IsValid)
         {
             return BadRequest(
-                CreateValidationResponse(validationResult));
+                validationResult.ToApiResponse());
         }
 
         var result = await _authService.LoginAsync(dto);
@@ -73,24 +73,5 @@ public class AuthController : ControllerBase
             Message = "Login successful.",
             Data = result
         });
-    }
-
-    private static ApiResponse<object> CreateValidationResponse(
-        ValidationResult validationResult)
-    {
-        var errors = validationResult.Errors
-            .GroupBy(error => error.PropertyName)
-            .ToDictionary(
-                group => group.Key,
-                group => group
-                    .Select(error => error.ErrorMessage)
-                    .ToArray());
-
-        return new ApiResponse<object>
-        {
-            Success = false,
-            Message = "Validation failed.",
-            Data = errors
-        };
     }
 }

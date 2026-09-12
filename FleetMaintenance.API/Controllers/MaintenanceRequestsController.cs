@@ -1,4 +1,5 @@
 ﻿using FleetMaintenance.Application.Common.Authorization;
+using FleetMaintenance.Application.Common.Extensions;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.MaintenanceRequests;
 using FleetMaintenance.Application.Interfaces.Services;
@@ -42,7 +43,7 @@ public class MaintenanceRequestsController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return CreateValidationResponse(validationResult);
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var result = await _maintenanceRequestService.GetPagedAsync(filter);
@@ -81,7 +82,7 @@ public class MaintenanceRequestsController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return CreateValidationResponse(validationResult);
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var result = await _maintenanceRequestService.GetMyRequestsPagedAsync(filter);
@@ -135,7 +136,7 @@ public class MaintenanceRequestsController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return CreateValidationResponse(validationResult);
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var request = await _maintenanceRequestService.CreateAsync(dto);
@@ -163,8 +164,7 @@ public class MaintenanceRequestsController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return CreateValidationResponse(
-                validationResult);
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var request = await _maintenanceRequestService.ApproveAsync(id, dto);
@@ -187,7 +187,7 @@ public class MaintenanceRequestsController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return CreateValidationResponse(validationResult);
+            return BadRequest(validationResult.ToApiResponse());
         }
 
         var request = await _maintenanceRequestService.RejectAsync(id, dto);
@@ -199,25 +199,6 @@ public class MaintenanceRequestsController : ControllerBase
                 Message =
                     "Maintenance request rejected successfully.",
                 Data = request
-            });
-    }
-
-    private BadRequestObjectResult CreateValidationResponse(ValidationResult validationResult)
-    {
-        var errors = validationResult.Errors
-            .GroupBy(error => error.PropertyName)
-            .ToDictionary(
-                group => group.Key,
-                group => group
-                    .Select(error => error.ErrorMessage)
-                    .ToArray());
-
-        return BadRequest(
-            new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Validation failed.",
-                Data = errors
             });
     }
 }

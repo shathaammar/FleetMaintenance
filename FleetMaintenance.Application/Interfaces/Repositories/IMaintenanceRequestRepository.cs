@@ -4,7 +4,7 @@ using FleetMaintenance.Domain.Entities;
 
 namespace FleetMaintenance.Application.Interfaces.Repositories;
 
-public interface IMaintenanceRequestRepository: IGenericRepository<MaintenanceRequest>
+public interface IMaintenanceRequestRepository : IGenericRepository<MaintenanceRequest>
 {
     Task<MaintenanceRequest?> GetByIdWithDetailsAsync(int id);
     Task<PagedResult<MaintenanceRequest>> GetPagedAsync(MaintenanceRequestFilterDto filter);
@@ -12,4 +12,6 @@ public interface IMaintenanceRequestRepository: IGenericRepository<MaintenanceRe
     Task<PagedResult<MaintenanceRequest>> GetPagedByUserIdAsync(MaintenanceRequestFilterDto filter, string userId);
 
     Task<bool> HasPendingRequestAsync(string userId, int vehicleId, int maintenanceTypeId);
+
+    Task<MaintenanceRequest?> GetByMaintenanceRecordIdAsync(int maintenanceRecordId);
 }
