@@ -40,10 +40,6 @@ builder.Services
         options.Password.RequireLowercase = true;
         options.Password.RequireDigit = true;
         options.Password.RequireNonAlphanumeric = false;
-
-        // Account lockout (brute-force protection).
-        // Applied automatically to every user created via UserManager.CreateAsync,
-        // because AllowedForNewUsers = true sets LockoutEnabled = true at creation time.
         options.Lockout.AllowedForNewUsers = true;
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
@@ -114,6 +110,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Cotrollers
 builder.Services.AddControllers()

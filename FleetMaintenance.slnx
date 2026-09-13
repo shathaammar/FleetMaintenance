@@ -1,6 +1,8 @@
 <Solution>
   <Project Path="FleetMaintenance.API/FleetMaintenance.API.csproj" />
+  <Project Path="FleetMaintenance.Application.Tests/FleetMaintenance.Application.Tests.csproj" Id="e8663e13-27d6-45b2-b62d-080aaf8f8590" />
   <Project Path="FleetMaintenance.Application/FleetMaintenance.Application.csproj" />
   <Project Path="FleetMaintenance.Domain/FleetMaintenance.Domain.csproj" />
+  <Project Path="FleetMaintenance.Infrastructure.Tests/FleetMaintenance.Infrastructure.Tests.csproj" Id="41ad16cd-71fd-46f8-bb1d-890889979a88" />
   <Project Path="FleetMaintenance.Infrastructure/FleetMaintenance.Infrastructure.csproj" />
 </Solution>
