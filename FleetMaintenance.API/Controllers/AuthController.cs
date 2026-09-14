@@ -5,6 +5,7 @@ using FleetMaintenance.Application.DTOs.Auth;
 using FleetMaintenance.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FleetMaintenance.API.Controllers;
 
@@ -27,9 +28,9 @@ public class AuthController : ControllerBase
         _loginValidator = loginValidator;
     }
 
+    [EnableRateLimiting("register")]
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>>
-        Register(RegisterDto dto)
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(RegisterDto dto)
     {
         var validationResult =
             await _registerValidator.ValidateAsync(dto);
@@ -52,9 +53,9 @@ public class AuthController : ControllerBase
             });
     }
 
+    [EnableRateLimiting("login")]
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>>
-        Login(LoginDto dto)
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(LoginDto dto)
     {
         var validationResult =
             await _loginValidator.ValidateAsync(dto);

@@ -120,9 +120,6 @@ public class MaintenanceTypeService
                 NormalizeDescription(dto.Description);
         }
 
-        await _maintenanceTypeRepository.UpdateAsync(
-            maintenanceType);
-
         await _unitOfWork.SaveChangesAsync();
 
         return MapToDto(maintenanceType);

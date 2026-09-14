@@ -1,57 +1,24 @@
 using FleetMaintenance.API.Middleware;
 using FleetMaintenance.API.Services;
-using FleetMaintenance.Application.Common.Settings;
-using FleetMaintenance.Application.Interfaces.Repositories;
+using FleetMaintenance.Application;
+using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.Interfaces.Services;
-using FleetMaintenance.Application.Interfaces.UnitOfWork;
-using FleetMaintenance.Application.Services;
-using FleetMaintenance.Application.Validators.MaintenanceTypes;
-using FleetMaintenance.Application.Validators.Vehicles;
-using FleetMaintenance.Infrastructure.Data;
+using FleetMaintenance.Infrastructure;
 using FleetMaintenance.Infrastructure.Identity;
-using FleetMaintenance.Infrastructure.Repositories;
-using FleetMaintenance.Infrastructure.UnitOfWork;
-using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"));
-});
-
-builder.Services
-    .AddIdentityCore<ApplicationUser>(options =>
-    {
-        options.User.RequireUniqueEmail = true;
-
-        options.Password.RequiredLength = 8;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireDigit = true;
-        options.Password.RequireNonAlphanumeric = false;
-        options.Lockout.AllowedForNewUsers = true;
-        options.Lockout.MaxFailedAccessAttempts = 5;
-        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-    })
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddSignInManager()
-    .AddDefaultTokenProviders();
-
-builder.Services.Configure<JwtSettings>(
-    builder.Configuration.GetSection(
-        JwtSettings.SectionName));
+// Application and Infrastructure services
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
 string jwtKey =
     builder.Configuration["Jwt:Key"]
@@ -91,26 +58,60 @@ builder.Services
             };
     });
 
-// Dependency Injection
+// API/host-owned dependencies
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<IVehicleService, VehicleService>();
-builder.Services.AddScoped<IMaintenanceTypeRepository, MaintenanceTypeRepository>();
-builder.Services.AddScoped<IMaintenanceTypeService, MaintenanceTypeService>();
-builder.Services.AddScoped<IMaintenanceRecordRepository, MaintenanceRecordRepository>();
-builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
-builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRequestRepository>();
-builder.Services.AddScoped<IMaintenanceRequestService, MaintenanceRequestService>();
-builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IProfileService, ProfileService>();
-builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientIpPartitionKey(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("register", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientIpPartitionKey(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode =
+            StatusCodes.Status429TooManyRequests;
+
+        context.HttpContext.Response.ContentType = "application/json";
+
+        var response = new ApiResponse<object>
+        {
+            Success = false,
+            Message = "Too many requests. Please try again later.",
+            Data = null
+        };
+
+        await context.HttpContext.Response.WriteAsync(
+            JsonSerializer.Serialize(response),
+            cancellationToken);
+    };
+});
+
+static string GetClientIpPartitionKey(HttpContext httpContext)
+{
+    return httpContext.Connection.RemoteIpAddress?.ToString()
+        ?? "unknown";
+}
 
 // Cotrollers
 builder.Services.AddControllers()
@@ -153,10 +154,6 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
-builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleDtoValidator>();
-
-builder.Services.AddValidatorsFromAssemblyContaining<CreateMaintenanceTypeDtoValidator>();
-
 string[] allowedOrigins =
     builder.Configuration
         .GetSection("Cors:AllowedOrigins")
@@ -196,6 +193,8 @@ app.UseCors("Frontend");
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseRateLimiter();
 
 app.MapControllers();
 

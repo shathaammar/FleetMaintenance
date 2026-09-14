@@ -21,14 +21,6 @@ public class VehicleService : IVehicleService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<VehicleDto>> GetAllAsync()
-    {
-        var vehicles = await _vehicleRepository.GetAllAsync();
-
-        return vehicles
-            .Select(MapToDto)
-            .ToList();
-    }
     public async Task<PagedResult<VehicleDto>> GetPagedAsync(VehicleFilterDto filter)
     {
         var result =
@@ -135,6 +127,16 @@ public class VehicleService : IVehicleService
 
         if (dto.CurrentMileage.HasValue)
         {
+            int? maxCompletedMileage =
+                await _vehicleRepository.GetMaxCompletedMileageAsync(id);
+
+            if (maxCompletedMileage.HasValue &&
+                dto.CurrentMileage.Value < maxCompletedMileage.Value)
+            {
+                throw new ConflictException(
+                    $"Current mileage cannot be less than the vehicle's completed service history of {maxCompletedMileage.Value}.");
+            }
+
             vehicle.CurrentMileage = dto.CurrentMileage.Value;
         }
 
@@ -143,7 +145,6 @@ public class VehicleService : IVehicleService
             vehicle.Status = dto.Status.Value;
         }
 
-        await _vehicleRepository.UpdateAsync(vehicle);
         await _unitOfWork.SaveChangesAsync();
 
         return MapToDto(vehicle);

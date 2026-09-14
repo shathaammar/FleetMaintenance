@@ -5,7 +5,6 @@ namespace FleetMaintenance.Application.Interfaces.Services
 {
     public interface IVehicleService
     {
-        Task<List<VehicleDto>> GetAllAsync();
         Task<PagedResult<VehicleDto>> GetPagedAsync(VehicleFilterDto filter);
 
         Task<VehicleDto> GetByIdAsync(int id);

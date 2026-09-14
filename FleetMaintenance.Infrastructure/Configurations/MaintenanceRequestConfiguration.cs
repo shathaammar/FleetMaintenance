@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace FleetMaintenance.Infrastructure.Data.Configurations;
+namespace FleetMaintenance.Infrastructure.Configurations;
 
 public class MaintenanceRequestConfiguration
     : IEntityTypeConfiguration<MaintenanceRequest>

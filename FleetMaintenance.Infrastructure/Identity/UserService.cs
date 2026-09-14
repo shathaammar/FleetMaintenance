@@ -1,4 +1,3 @@
-﻿using FleetMaintenance.Application.Common.Authorization;
 using FleetMaintenance.Application.Common.Exceptions;
 using FleetMaintenance.Application.Common.Models;
 using FleetMaintenance.Application.DTOs.Users;
@@ -6,6 +5,7 @@ using FleetMaintenance.Application.Interfaces.Services;
 using FleetMaintenance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using FleetMaintenance.Infrastructure.Common.Extensions;
 
 namespace FleetMaintenance.Infrastructure.Identity;
 
@@ -39,15 +39,12 @@ public class UserService : IUserService
                 (user.Email != null && user.Email.Contains(search)));
         }
 
-        int totalCount = await query.CountAsync();
+        query = query.OrderByDescending(user => user.CreatedAt);
 
-        List<ApplicationUser> users = await query
-            .OrderByDescending(user => user.CreatedAt)
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .ToListAsync();
+        PagedResult<ApplicationUser> pagedUsers =
+            await query.ToPagedResultAsync(filter.PageNumber, filter.PageSize);
 
-        List<string> userIds = users
+        List<string> userIds = pagedUsers.Items
             .Select(user => user.Id)
             .ToList();
 
@@ -67,7 +64,7 @@ public class UserService : IUserService
                     .Select(row => row.RoleName ?? string.Empty)
                     .ToList());
 
-        List<UserSummaryDto> items = users
+        List<UserSummaryDto> items = pagedUsers.Items
             .Select(user => new UserSummaryDto
             {
                 Id = user.Id,
@@ -83,114 +80,55 @@ public class UserService : IUserService
         return new PagedResult<UserSummaryDto>
         {
             Items = items,
-            PageNumber = filter.PageNumber,
-            PageSize = filter.PageSize,
-            TotalCount = totalCount
+            PageNumber = pagedUsers.PageNumber,
+            PageSize = pagedUsers.PageSize,
+            TotalCount = pagedUsers.TotalCount
         };
     }
 
     public async Task<UserSummaryDto> UpdateRoleAsync(string userId, UpdateUserRoleDto dto)
     {
-        string currentUserId = _currentUserService.UserId;
-
-        if (string.Equals(userId, currentUserId, StringComparison.Ordinal))
-        {
-            throw new ConflictException(
-                "You cannot change your own role.");
-        }
-
-        ApplicationUser? user = await _userManager.FindByIdAsync(userId);
+        var user = await _userManager.FindByIdAsync(userId);
 
         if (user is null)
         {
-            throw new NotFoundException(
-                $"User with ID {userId} was not found.");
+            throw new NotFoundException("User was not found.");
+        }
+
+        if (user.Id == _currentUserService.UserId)
+        {
+            throw new ConflictException("You cannot change your own role.");
         }
 
         IList<string> currentRoles = await _userManager.GetRolesAsync(user);
 
-        bool isCurrentlyAdmin = currentRoles.Contains(AppRoles.Admin);
-        bool targetIsAdmin = dto.Role == AppRoles.Admin;
-
-        if (isCurrentlyAdmin && !targetIsAdmin)
+        // Remove all current roles then add the requested one
+        if (currentRoles.Any())
         {
-            int adminCount =
-                (await _userManager.GetUsersInRoleAsync(AppRoles.Admin)).Count;
+            IdentityResult removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
 
-            if (adminCount <= 1)
+            if (!removeResult.Succeeded)
             {
-                throw new ConflictException(
-                    "Cannot change the role of the last remaining Admin.");
+                throw new ConflictException(string.Join(" ", removeResult.Errors.Select(e => e.Description)));
             }
         }
 
-        List<string> rolesToRemove = currentRoles
-            .Where(role => role != dto.Role)
-            .ToList();
+        IdentityResult addResult = await _userManager.AddToRoleAsync(user, dto.Role);
 
-        bool needsAdd = !currentRoles.Contains(dto.Role);
-
-        if (rolesToRemove.Count == 0 && !needsAdd)
+        if (!addResult.Succeeded)
         {
-            return await MapToDtoAsync(user);
+            throw new ConflictException(string.Join(" ", addResult.Errors.Select(e => e.Description)));
         }
 
-        await using var transaction =
-            await _context.Database.BeginTransactionAsync();
-
-        try
-        {
-            if (rolesToRemove.Count > 0)
-            {
-                IdentityResult removeResult =
-                    await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
-
-                if (!removeResult.Succeeded)
-                {
-                    throw new ConflictException(GetIdentityErrors(removeResult));
-                }
-            }
-
-            if (needsAdd)
-            {
-                IdentityResult addResult =
-                    await _userManager.AddToRoleAsync(user, dto.Role);
-
-                if (!addResult.Succeeded)
-                {
-                    throw new ConflictException(GetIdentityErrors(addResult));
-                }
-            }
-
-            await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-
-        return await MapToDtoAsync(user);
-    }
-
-    private async Task<UserSummaryDto> MapToDtoAsync(ApplicationUser user)
-    {
-        IList<string> roles = await _userManager.GetRolesAsync(user);
+        IList<string> rolesAfter = await _userManager.GetRolesAsync(user);
 
         return new UserSummaryDto
         {
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email ?? string.Empty,
-            Roles = roles.ToList(),
+            Roles = rolesAfter.ToList(),
             CreatedAt = user.CreatedAt
         };
-    }
-
-    private static string GetIdentityErrors(IdentityResult result)
-    {
-        return string.Join(
-            " ",
-            result.Errors.Select(error => error.Description));
     }
 }

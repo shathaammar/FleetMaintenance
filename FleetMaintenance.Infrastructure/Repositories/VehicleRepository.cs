@@ -2,6 +2,8 @@
 using FleetMaintenance.Application.DTOs.Vehicles;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Domain.Entities;
+using FleetMaintenance.Domain.Enums;
+using FleetMaintenance.Infrastructure.Common.Extensions;
 using FleetMaintenance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,8 +19,7 @@ public class VehicleRepository
     {
     }
 
-    public override async Task<List<Vehicle>>
-        GetAllAsync()
+    public override async Task<List<Vehicle>> GetAllAsync()
     {
         return await Context.Vehicles
             .AsNoTracking()
@@ -27,9 +28,7 @@ public class VehicleRepository
             .ToListAsync();
     }
 
-    public async Task<bool> PlateNumberExistsAsync(
-        string plateNumber,
-        int? excludedVehicleId = null)
+    public async Task<bool> PlateNumberExistsAsync(string plateNumber, int? excludedVehicleId = null)
     {
         string normalizedPlateNumber =
             plateNumber.Trim().ToUpper();
@@ -63,8 +62,16 @@ public class VehicleRepository
         return usedByMaintenanceRequests;
     }
 
-    public async Task<PagedResult<Vehicle>>
-        GetPagedAsync(VehicleFilterDto filter)
+    public async Task<int?> GetMaxCompletedMileageAsync(int vehicleId)
+    {
+        return await Context.MaintenanceRecords
+            .Where(record =>
+                record.VehicleId == vehicleId &&
+                record.Status == MaintenanceStatus.Completed)
+            .MaxAsync(record => (int?)record.MileageAtService);
+    }
+
+    public async Task<PagedResult<Vehicle>> GetPagedAsync(VehicleFilterDto filter)
     {
         IQueryable<Vehicle> query =
             Context.Vehicles.AsNoTracking();
@@ -86,25 +93,11 @@ public class VehicleRepository
                     filter.Status.Value);
         }
 
-        int totalCount =
-            await query.CountAsync();
+        query = query.OrderByDescending(vehicle =>
+            vehicle.CreatedAt);
 
-        List<Vehicle> vehicles =
-            await query
-                .OrderByDescending(vehicle =>
-                    vehicle.CreatedAt)
-                .Skip(
-                    (filter.PageNumber - 1) *
-                    filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
-
-        return new PagedResult<Vehicle>
-        {
-            Items = vehicles,
-            PageNumber = filter.PageNumber,
-            PageSize = filter.PageSize,
-            TotalCount = totalCount
-        };
+        return await query.ToPagedResultAsync(
+            filter.PageNumber,
+            filter.PageSize);
     }
 }

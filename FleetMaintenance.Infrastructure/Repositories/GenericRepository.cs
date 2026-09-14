@@ -32,13 +32,15 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         await DbSet.AddAsync(entity);
     }
 
-    public virtual async Task UpdateAsync(T entity)
+    public virtual Task UpdateAsync(T entity)
     {
         DbSet.Update(entity);
+        return Task.CompletedTask;
     }
 
-    public virtual async Task DeleteAsync(T entity)
+    public virtual Task DeleteAsync(T entity)
     {
         DbSet.Remove(entity);
+        return Task.CompletedTask;
     }
 }

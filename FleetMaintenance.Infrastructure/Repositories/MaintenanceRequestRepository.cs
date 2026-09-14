@@ -3,6 +3,7 @@ using FleetMaintenance.Application.DTOs.MaintenanceRequests;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Domain.Entities;
 using FleetMaintenance.Domain.Enums;
+using FleetMaintenance.Infrastructure.Common.Extensions;
 using FleetMaintenance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,7 +33,9 @@ public class MaintenanceRequestRepository : GenericRepository<MaintenanceRequest
 
         query = ApplyFilters(query, filter);
 
-        return await CreatePagedResultAsync(query, filter);
+        query = query.OrderByDescending(request => request.RequestedAt);
+
+        return await query.ToPagedResultAsync(filter.PageNumber, filter.PageSize);
     }
 
     public async Task<PagedResult<MaintenanceRequest>> GetPagedByUserIdAsync(MaintenanceRequestFilterDto filter, string userId)
@@ -42,9 +45,9 @@ public class MaintenanceRequestRepository : GenericRepository<MaintenanceRequest
 
         query = ApplyFilters(query, filter);
 
-        return await CreatePagedResultAsync(
-            query,
-            filter);
+        query = query.OrderByDescending(request => request.RequestedAt);
+
+        return await query.ToPagedResultAsync(filter.PageNumber, filter.PageSize);
     }
 
     public async Task<MaintenanceRequest?> GetByMaintenanceRecordIdAsync(int maintenanceRecordId)
@@ -95,28 +98,6 @@ public class MaintenanceRequestRepository : GenericRepository<MaintenanceRequest
         }
 
         return query;
-    }
-
-    private static async Task<PagedResult<MaintenanceRequest>> CreatePagedResultAsync(IQueryable<MaintenanceRequest> query, MaintenanceRequestFilterDto filter)
-    {
-        int totalCount = await query.CountAsync();
-
-        List<MaintenanceRequest> requests = await query
-                .OrderByDescending(request =>
-                    request.RequestedAt)
-                .Skip(
-                    (filter.PageNumber - 1) *
-                    filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
-
-        return new PagedResult<MaintenanceRequest>
-        {
-            Items = requests,
-            PageNumber = filter.PageNumber,
-            PageSize = filter.PageSize,
-            TotalCount = totalCount
-        };
     }
 
     public async Task<bool> HasPendingRequestAsync(string userId, int vehicleId, int maintenanceTypeId)

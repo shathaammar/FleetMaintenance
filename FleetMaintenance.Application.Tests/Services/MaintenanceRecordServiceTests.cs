@@ -4,7 +4,6 @@ using FleetMaintenance.Application.Services;
 using FleetMaintenance.Domain.Entities;
 using FleetMaintenance.Domain.Enums;
 using Moq;
-using Xunit;
 
 namespace FleetMaintenance.Application.Tests.Services;
 
@@ -77,9 +76,8 @@ public class MaintenanceRecordServiceTests
         Assert.Equal(MaintenanceRequestStatus.Cancelled, linkedRequest.Status);
 
         _requestRepositoryMock.Verify(
-            repo => repo.UpdateAsync(
-                It.Is<MaintenanceRequest>(request => request.Id == linkedRequest.Id)),
-            Times.Once);
+            repo => repo.UpdateAsync(It.IsAny<MaintenanceRequest>()),
+            Times.Never);
 
         _unitOfWorkMock.Verify(uow => uow.SaveChangesAsync(), Times.Once);
     }

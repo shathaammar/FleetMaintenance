@@ -2,7 +2,7 @@
 using FleetMaintenance.Application.Common.Exceptions;
 using FleetMaintenance.Application.DTOs.Auth;
 using FleetMaintenance.Application.Interfaces.Services;
-using FleetMaintenance.Infrastructure.Data;
+using FleetMaintenance.Application.Interfaces.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 
 namespace FleetMaintenance.Infrastructure.Identity;
@@ -12,18 +12,18 @@ public class AuthService : IAuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITokenService _tokenService;
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IUnitOfWork _unitOfWork;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         ITokenService tokenService,
-        ApplicationDbContext dbContext)
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _tokenService = tokenService;
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(
@@ -49,10 +49,7 @@ public class AuthService : IAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        await using var transaction =
-            await _dbContext.Database.BeginTransactionAsync();
-
-        try
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
             IdentityResult createResult =
                 await _userManager.CreateAsync(
@@ -83,14 +80,7 @@ public class AuthService : IAuthService
 
                 throw new ConflictException(errors);
             }
-
-            await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        });
 
         return await CreateAuthResponseAsync(user);
     }

@@ -213,8 +213,6 @@ public class MaintenanceRequestService : IMaintenanceRequestService
 
         await _maintenanceRecordRepository.AddAsync(maintenanceRecord);
 
-        await _maintenanceRequestRepository.UpdateAsync(request);
-
         await _unitOfWork.SaveChangesAsync();
 
         return await GetByIdAsync(request.Id);
@@ -244,8 +242,6 @@ public class MaintenanceRequestService : IMaintenanceRequestService
 
         request.RejectionReason = dto.Reason.Trim();
 
-        await _maintenanceRequestRepository.UpdateAsync(request);
-
         await _unitOfWork.SaveChangesAsync();
 
         return await GetByIdAsync(request.Id);
@@ -269,13 +265,6 @@ public class MaintenanceRequestService : IMaintenanceRequestService
         }
 
         request.Status = MaintenanceRequestStatus.Cancelled;
-
-        request.ReviewedAt = null;
-        request.ReviewedByUserId = null;
-        request.RejectionReason = null;
-        request.MaintenanceRecordId = null;
-
-        await _maintenanceRequestRepository.UpdateAsync(request);
 
         await _unitOfWork.SaveChangesAsync();
 

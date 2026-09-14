@@ -3,6 +3,7 @@ using FleetMaintenance.Application.DTOs.MaintenanceRecords;
 using FleetMaintenance.Application.Interfaces.Repositories;
 using FleetMaintenance.Domain.Entities;
 using FleetMaintenance.Domain.Enums;
+using FleetMaintenance.Infrastructure.Common.Extensions;
 using FleetMaintenance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -84,26 +85,12 @@ public class MaintenanceRecordRepository
                 toDateExclusive);
         }
 
-        int totalCount =
-            await query.CountAsync();
+        query = query.OrderByDescending(record =>
+            record.ScheduledDate);
 
-        List<MaintenanceRecord> records =
-            await query
-                .OrderByDescending(record =>
-                    record.ScheduledDate)
-                .Skip(
-                    (filter.PageNumber - 1) *
-                    filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
-
-        return new PagedResult<MaintenanceRecord>
-        {
-            Items = records,
-            PageNumber = filter.PageNumber,
-            PageSize = filter.PageSize,
-            TotalCount = totalCount
-        };
+        return await query.ToPagedResultAsync(
+            filter.PageNumber,
+            filter.PageSize);
     }
 
     public async Task<MaintenanceRecord?>

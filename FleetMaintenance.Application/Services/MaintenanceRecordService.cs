@@ -9,8 +9,7 @@ using FleetMaintenance.Domain.Enums;
 
 namespace FleetMaintenance.Application.Services;
 
-public class MaintenanceRecordService
-    : IMaintenanceRecordService
+public class MaintenanceRecordService : IMaintenanceRecordService
 {
     private readonly IMaintenanceRecordRepository _recordRepository;
     private readonly IVehicleRepository _vehicleRepository;
@@ -208,8 +207,6 @@ public class MaintenanceRecordService
             record.Notes = NormalizeNotes(dto.Notes);
         }
 
-        await _recordRepository.UpdateAsync(record);
-
         await _unitOfWork.SaveChangesAsync();
 
         return await GetSavedRecordAsync(record.Id);
@@ -246,9 +243,6 @@ public class MaintenanceRecordService
 
         vehicle.CurrentMileage = dto.MileageAtService;
 
-        await _recordRepository.UpdateAsync(record);
-        await _vehicleRepository.UpdateAsync(vehicle);
-
         await _unitOfWork.SaveChangesAsync();
 
         return await GetSavedRecordAsync(record.Id);
@@ -260,8 +254,6 @@ public class MaintenanceRecordService
 
         record.Status = MaintenanceStatus.Cancelled;
 
-        await _recordRepository.UpdateAsync(record);
-
         var linkedRequest =
             await _requestRepository.GetByMaintenanceRecordIdAsync(id);
 
@@ -269,8 +261,6 @@ public class MaintenanceRecordService
             linkedRequest.Status == MaintenanceRequestStatus.Approved)
         {
             linkedRequest.Status = MaintenanceRequestStatus.Cancelled;
-
-            await _requestRepository.UpdateAsync(linkedRequest);
         }
 
         await _unitOfWork.SaveChangesAsync();
