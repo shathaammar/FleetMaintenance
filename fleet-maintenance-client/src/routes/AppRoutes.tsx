@@ -12,6 +12,7 @@ const AdminDashboardPage = lazy(() => import("../pages/admin/AdminDashboardPage"
 const AdminMaintenanceRecordsPage = lazy(() => import("../pages/admin/AdminMaintenanceRecordsPage").then(({ AdminMaintenanceRecordsPage }) => ({ default: AdminMaintenanceRecordsPage })));
 const AdminMaintenanceRequestsPage = lazy(() => import("../pages/admin/AdminMaintenanceRequestsPage").then(({ AdminMaintenanceRequestsPage }) => ({ default: AdminMaintenanceRequestsPage })));
 const AdminMaintenanceTypesPage = lazy(() => import("../pages/admin/AdminMaintenanceTypesPage").then(({ AdminMaintenanceTypesPage }) => ({ default: AdminMaintenanceTypesPage })));
+const AdminUsersPage = lazy(() => import("../pages/admin/AdminUsersPage").then(({ AdminUsersPage }) => ({ default: AdminUsersPage })));
 const AdminVehiclesPage = lazy(() => import("../pages/admin/AdminVehiclesPage").then(({ AdminVehiclesPage }) => ({ default: AdminVehiclesPage })));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage").then(({ LoginPage }) => ({ default: LoginPage })));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage").then(({ RegisterPage }) => ({ default: RegisterPage })));
@@ -100,6 +101,13 @@ export function AppRoutes() {
             }
             element={
               <AdminMaintenanceRequestsPage />
+            }
+          />
+
+          <Route
+            path={ROUTES.ADMIN.USERS}
+            element={
+              <AdminUsersPage />
             }
           />
 

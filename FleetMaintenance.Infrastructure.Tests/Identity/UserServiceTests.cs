@@ -16,7 +16,6 @@ public class UserServiceTests
     [Fact]
     public async Task UpdateRoleAsync_WhenChangingAnotherUserFromUserToAdmin_ResultsInExactlyAdmin()
     {
-        // Arrange
         using var fixture = new SqliteTestDbContextFactory();
 
         var userManager = fixture.Services.GetRequiredService<UserManager<ApplicationUser>>();
@@ -36,12 +35,10 @@ public class UserServiceTests
 
         var service = new UserService(userManager, fixture.Context, currentUserServiceMock.Object);
 
-        // Act
         var result = await service.UpdateRoleAsync(
             targetUser.Id,
             new UpdateUserRoleDto { Role = AppRoles.Admin });
 
-        // Assert
         Assert.Equal(new[] { AppRoles.Admin }, result.Roles);
 
         var rolesAfter = await userManager.GetRolesAsync(targetUser);
@@ -52,7 +49,6 @@ public class UserServiceTests
     [Fact]
     public async Task UpdateRoleAsync_WhenUserHasBothRoles_NormalizesToExactlyRequestedRole()
     {
-        // Arrange
         using var fixture = new SqliteTestDbContextFactory();
 
         var userManager = fixture.Services.GetRequiredService<UserManager<ApplicationUser>>();
@@ -76,12 +72,10 @@ public class UserServiceTests
 
         var service = new UserService(userManager, fixture.Context, currentUserServiceMock.Object);
 
-        // Act
         var result = await service.UpdateRoleAsync(
             targetUser.Id,
             new UpdateUserRoleDto { Role = AppRoles.Admin });
 
-        // Assert
         Assert.Equal(new[] { AppRoles.Admin }, result.Roles);
 
         var rolesAfter = await userManager.GetRolesAsync(targetUser);
@@ -92,7 +86,6 @@ public class UserServiceTests
     [Fact]
     public async Task UpdateRoleAsync_WhenChangingOwnRole_ThrowsConflictException()
     {
-        // Arrange
         using var fixture = new SqliteTestDbContextFactory();
 
         var userManager = fixture.Services.GetRequiredService<UserManager<ApplicationUser>>();
@@ -109,13 +102,57 @@ public class UserServiceTests
 
         var service = new UserService(userManager, fixture.Context, currentUserServiceMock.Object);
 
-        // Act & Assert
         await Assert.ThrowsAsync<ConflictException>(() =>
             service.UpdateRoleAsync(admin.Id, new UpdateUserRoleDto { Role = AppRoles.User }));
 
         var rolesAfter = await userManager.GetRolesAsync(admin);
         Assert.Single(rolesAfter);
         Assert.Equal(AppRoles.Admin, rolesAfter[0]);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_WhenCalledByAdmin_ExcludesCurrentUserFromItemsAndTotalCount()
+    {
+        using var fixture = new SqliteTestDbContextFactory();
+
+        var userManager = fixture.Services.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var admin = await CreateUserAsync(userManager, "admin3@fleetnova.test", "Admin Three");
+        var otherUserOne = await CreateUserAsync(userManager, "other1@fleetnova.test", "Other User One");
+        var otherUserTwo = await CreateUserAsync(userManager, "other2@fleetnova.test", "Other User Two");
+
+        var currentUserServiceMock = new Mock<ICurrentUserService>();
+        currentUserServiceMock.Setup(x => x.UserId).Returns(admin.Id);
+
+        var service = new UserService(userManager, fixture.Context, currentUserServiceMock.Object);
+
+        var result = await service.GetPagedAsync(new UserFilterDto());
+
+        Assert.Equal(2, result.TotalCount);
+        Assert.Equal(2, result.Items.Count);
+        Assert.DoesNotContain(result.Items, item => item.Id == admin.Id);
+        Assert.Contains(result.Items, item => item.Id == otherUserOne.Id);
+        Assert.Contains(result.Items, item => item.Id == otherUserTwo.Id);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_WhenCurrentUserIsOnlyUser_ReturnsEmptyResult()
+    {
+        using var fixture = new SqliteTestDbContextFactory();
+
+        var userManager = fixture.Services.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var admin = await CreateUserAsync(userManager, "solo@fleetnova.test", "Solo Admin");
+
+        var currentUserServiceMock = new Mock<ICurrentUserService>();
+        currentUserServiceMock.Setup(x => x.UserId).Returns(admin.Id);
+
+        var service = new UserService(userManager, fixture.Context, currentUserServiceMock.Object);
+
+        var result = await service.GetPagedAsync(new UserFilterDto());
+
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.TotalCount);
     }
 
     private static async Task<ApplicationUser> CreateUserAsync(

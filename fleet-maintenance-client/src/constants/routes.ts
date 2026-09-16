@@ -4,14 +4,15 @@ export const ROUTES = {
   REGISTER: "/register",
 
   ADMIN: {
-    ROOT: "/admin",
-    DASHBOARD: "/admin/dashboard",
-    VEHICLES: "/admin/vehicles",
-    MAINTENANCE_TYPES: "/admin/maintenance-types",
-    MAINTENANCE_RECORDS: "/admin/maintenance-records",
-    MAINTENANCE_REQUESTS: "/admin/maintenance-requests",
-    SETTINGS: "/admin/settings",
-  },
+  ROOT: "/admin",
+  DASHBOARD: "/admin/dashboard",
+  VEHICLES: "/admin/vehicles",
+  MAINTENANCE_TYPES: "/admin/maintenance-types",
+  MAINTENANCE_RECORDS: "/admin/maintenance-records",
+  MAINTENANCE_REQUESTS: "/admin/maintenance-requests",
+  USERS: "/admin/users",
+  SETTINGS: "/admin/settings",
+},
 
   USER: {
     ROOT: "/user",

@@ -30,6 +30,9 @@ public class UserService : IUserService
         IQueryable<ApplicationUser> query =
             _context.Users.AsNoTracking();
 
+        query = query.Where(user =>
+            user.Id != _currentUserService.UserId);
+
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             string search = filter.Search.Trim();

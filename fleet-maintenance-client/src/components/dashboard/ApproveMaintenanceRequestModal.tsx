@@ -555,7 +555,7 @@ export function ApproveMaintenanceRequestModal({
               disabled={isSubmitting}
               className="h-11 rounded-xl border border-border-dark px-5 text-sm font-bold text-text-muted transition hover:border-primary/30 hover:text-text-main disabled:opacity-50"
             >
-              Review Later
+              Cancel
             </button>
 
             <button
@@ -577,9 +577,6 @@ export function ApproveMaintenanceRequestModal({
                 </>
               ) : (
                 <>
-                  <CheckCircle2
-                    size={17}
-                  />
                   Approve & Schedule
                 </>
               )}
