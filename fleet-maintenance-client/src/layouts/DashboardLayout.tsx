@@ -2,11 +2,7 @@ import {
   AnimatePresence,
   motion,
 } from "framer-motion";
-import {
-  Bell,
-  Menu,
-  Search,
-} from "lucide-react";
+import { Menu  } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -24,7 +20,7 @@ import {
   useAuth,
 } from "../hooks/useAuth";
 
-type UserRole = "Admin" | "User";
+import type { UserRole } from "../types/auth";
 
 interface DashboardLayoutProps {
   role: UserRole;
@@ -48,6 +44,9 @@ const pageTitles: Record<
 
   "/admin/maintenance-requests":
     "Maintenance Requests",
+
+  "/admin/users": 
+    "User Management",
 
   "/admin/settings":
     "Account Settings",
@@ -119,14 +118,12 @@ export function DashboardLayout({
     role,
   ]);
 
-  // Close the mobile sidebar after navigating.
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [
     location.pathname,
   ]);
 
-  // Close with Escape and prevent background scrolling.
   useEffect(() => {
     if (!isMobileMenuOpen) {
       return;
@@ -174,7 +171,6 @@ export function DashboardLayout({
 
   return (
     <div className="min-h-dvh bg-background text-text-main">
-      {/* Decorative background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -right-32 -top-32 size-[420px] rounded-full bg-primary/5 blur-[120px]" />
 
@@ -251,7 +247,6 @@ export function DashboardLayout({
         {/* Main content */}
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-30 flex h-20 items-center justify-between gap-3 border-b border-border-dark bg-background/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
-            {/* Mobile menu and title */}
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
                 type="button"
@@ -270,35 +265,7 @@ export function DashboardLayout({
               </h1>
             </div>
 
-            {/* Header actions */}
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <div className="relative hidden xl:block">
-                <Search
-                  size={17}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
-                />
-
-                <input
-                  type="search"
-                  placeholder="Type To Search"
-                  aria-label="Search"
-                  className="h-11 w-56 rounded-xl border border-border-dark bg-surface/80 pl-11 pr-4 text-sm text-text-main outline-none transition placeholder:text-text-muted/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 2xl:w-64"
-                />
-              </div>
-
-              <button
-                type="button"
-                className="relative grid size-11 shrink-0 place-items-center rounded-xl border border-border-dark bg-surface/80 text-text-muted transition hover:border-primary/40 hover:text-primary"
-                aria-label="Notifications"
-              >
-                <Bell size={19} />
-
-                <span
-                  className="absolute right-2.5 top-2.5 size-2 rounded-full bg-primary ring-2 ring-surface"
-                  aria-hidden="true"
-                />
-              </button>
-
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">             
               <div
                 className="hidden size-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary-light to-primary-dark font-display text-sm font-extrabold text-background shadow-lg shadow-primary/10 sm:grid"
                 title={

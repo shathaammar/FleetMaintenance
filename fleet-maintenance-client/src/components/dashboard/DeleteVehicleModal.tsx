@@ -88,7 +88,7 @@ export function DeleteVehicleModal({
             opacity: 0,
           }}
           onMouseDown={handleClose}
-          className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-background/80 p-2 backdrop-blur-sm sm:p-4"
+          className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-background/80 p-2 sm:p-4"
         >
           <motion.div
             initial={{

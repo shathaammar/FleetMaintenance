@@ -119,7 +119,7 @@ export function MaintenanceRecordDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/70 p-4">
       <button
         type="button"
         className="absolute inset-0 cursor-default"

@@ -30,7 +30,7 @@ import {
   useAuth,
 } from "../../hooks/useAuth";
 
-type UserRole = "Admin" | "User";
+import type { UserRole } from "../../types/auth";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -70,6 +70,11 @@ const adminItems: SidebarItem[] = [
     path: ROUTES.ADMIN.MAINTENANCE_REQUESTS,
     icon: ShieldCheck,
   },
+  {
+  label: "Users",
+  path: ROUTES.ADMIN.USERS,
+  icon: UserRound,
+},
 ];
 
 const userItems: SidebarItem[] = [

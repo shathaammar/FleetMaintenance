@@ -17,7 +17,6 @@ import {
 } from "react";
 import toast from "react-hot-toast";
 
-import { useAuth } from "../../hooks/useAuth";
 import { userService } from "../../services/userService";
 import type { PagedResult } from "../../types/api";
 import type { UserRole } from "../../types/auth";
@@ -42,10 +41,6 @@ const ROLE_OPTIONS: UserRole[] = [
 ];
 
 export function AdminUsersPage() {
-  const {
-    user: currentUser,
-  } = useAuth();
-
   const [
     result,
     setResult,
@@ -321,75 +316,55 @@ export function AdminUsersPage() {
 
                   <tbody>
                     {result.items.map(
-                      (item) => {
-                        const isCurrentUser =
-                          currentUser?.userId ===
-                          item.id;
+                      (item) => (
+                        <tr
+                          key={item.id}
+                          className="border-b border-border-dark/70 transition last:border-0 hover:bg-surface-light/40"
+                        >
+                          <td className="px-6 py-4">
+                            <p className="font-bold text-text-main">
+                              {
+                                item.fullName
+                              }
+                            </p>
+                          </td>
 
-                        return (
-                          <tr
-                            key={item.id}
-                            className="border-b border-border-dark/70 transition last:border-0 hover:bg-surface-light/40"
-                          >
-                            <td className="px-6 py-4">
-                              <p className="font-bold text-text-main">
-                                {
-                                  item.fullName
-                                }
-                              </p>
+                          <td className="px-4 py-4 text-sm text-text-muted">
+                            {item.email}
+                          </td>
 
-                              {isCurrentUser && (
-                                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                                  You
-                                </p>
-                              )}
-                            </td>
+                          <td className="px-4 py-4">
+                            <RoleBadges
+                              roles={
+                                item.roles
+                              }
+                            />
+                          </td>
 
-                            <td className="px-4 py-4 text-sm text-text-muted">
-                              {item.email}
-                            </td>
+                          <td className="px-4 py-4 text-sm text-text-muted">
+                            {formatDate(
+                              item.createdAt,
+                            )}
+                          </td>
 
-                            <td className="px-4 py-4">
-                              <RoleBadges
-                                roles={
-                                  item.roles
-                                }
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openRoleModal(
+                                  item,
+                                )
+                              }
+                              className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 text-xs font-extrabold text-primary transition hover:bg-primary hover:text-background"
+                            >
+                              <ShieldCheck
+                                size={15}
                               />
-                            </td>
-
-                            <td className="px-4 py-4 text-sm text-text-muted">
-                              {formatDate(
-                                item.createdAt,
-                              )}
-                            </td>
-
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openRoleModal(
-                                    item,
-                                  )
-                                }
-                                disabled={
-                                  isCurrentUser
-                                }
-                                title={
-                                  isCurrentUser
-                                    ? "You cannot change your own role."
-                                    : undefined
-                                }
-                                className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 text-xs font-extrabold text-primary transition hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-primary/10 disabled:hover:text-primary"
-                              >
-                                <ShieldCheck
-                                  size={15}
-                                />
-                                Change Role
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      },
+                              Change Role
+                            </button>
+                          </td>
+                        </tr>
+                      ),
                     )}
                   </tbody>
                 </table>
@@ -397,67 +372,56 @@ export function AdminUsersPage() {
 
               <div className="grid gap-3 p-4 lg:hidden">
                 {result.items.map(
-                  (item) => {
-                    const isCurrentUser =
-                      currentUser?.userId ===
-                      item.id;
-
-                    return (
-                      <article
-                        key={item.id}
-                        className="rounded-2xl border border-border-dark bg-background/40 p-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-display text-base font-extrabold text-text-main">
-                              {
-                                item.fullName
-                              }
-                            </p>
-
-                            <p className="mt-1 truncate text-xs text-text-muted">
-                              {item.email}
-                            </p>
-                          </div>
-
-                          <RoleBadges
-                            roles={
-                              item.roles
+                  (item) => (
+                    <article
+                      key={item.id}
+                      className="rounded-2xl border border-border-dark bg-background/40 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-display text-base font-extrabold text-text-main">
+                            {
+                              item.fullName
                             }
-                          />
-                        </div>
-
-                        <div className="mt-4 flex items-center justify-between border-t border-border-dark pt-4">
-                          <p className="text-xs text-text-muted">
-                            Joined{" "}
-                            {formatDate(
-                              item.createdAt,
-                            )}
                           </p>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openRoleModal(
-                                item,
-                              )
-                            }
-                            disabled={
-                              isCurrentUser
-                            }
-                            className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 text-xs font-extrabold text-primary transition hover:bg-primary hover:text-background disabled:cursor-not-allowed disabled:opacity-40"
-                          >
-                            <ShieldCheck
-                              size={15}
-                            />
-                            {isCurrentUser
-                              ? "This is you"
-                              : "Change Role"}
-                          </button>
+                          <p className="mt-1 truncate text-xs text-text-muted">
+                            {item.email}
+                          </p>
                         </div>
-                      </article>
-                    );
-                  },
+
+                        <RoleBadges
+                          roles={
+                            item.roles
+                          }
+                        />
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between border-t border-border-dark pt-4">
+                        <p className="text-xs text-text-muted">
+                          Joined{" "}
+                          {formatDate(
+                            item.createdAt,
+                          )}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openRoleModal(
+                              item,
+                            )
+                          }
+                          className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 text-xs font-extrabold text-primary transition hover:bg-primary hover:text-background"
+                        >
+                          <ShieldCheck
+                            size={15}
+                          />
+                          Change Role
+                        </button>
+                      </div>
+                    </article>
+                  ),
                 )}
               </div>
 
@@ -797,7 +761,7 @@ function ChangeRoleModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/70 p-4">
       <button
         type="button"
         className="absolute inset-0 cursor-default"
@@ -819,10 +783,6 @@ function ChangeRoleModal({
 
         <header className="relative flex items-start justify-between gap-4 border-b border-border-dark p-5 sm:p-6">
           <div className="flex min-w-0 gap-3">
-            <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-              <ShieldCheck size={21} />
-            </div>
-
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
                 Role Change
