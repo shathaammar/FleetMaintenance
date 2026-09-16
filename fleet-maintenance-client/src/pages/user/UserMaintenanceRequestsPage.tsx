@@ -18,9 +18,9 @@ import {
 
 import { Link, } from "react-router-dom";
 
-import { MaintenanceRequestDetailsModal } from "../../components/dashboard/MaintenanceRequestDetailsModal";
-import { MaintenanceRequestStatusBadge } from "../../components/dashboard/MaintenanceRequestStatusBadge";
-import CancelMaintenanceRequestModal from "../../components/maintenanceRequests/CancelMaintenanceRequestModal";
+import { MaintenanceRequestDetailsModal } from "../../components/Modals/MaintenanceRequestDetailsModal";
+import { MaintenanceRequestStatusBadge } from "../../components/Modals/MaintenanceRequestStatusBadge";
+import CancelMaintenanceRequestModal from "../../components/Modals/CancelMaintenanceRequestModal";
 
 import { maintenanceRequestService } from "../../services/maintenanceRequestService";
 

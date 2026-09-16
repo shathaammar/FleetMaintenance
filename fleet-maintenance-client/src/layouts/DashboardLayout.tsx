@@ -15,7 +15,7 @@ import {
 
 import {
   DashboardSidebar,
-} from "../components/dashboard/DashboardSidebar";
+} from "../components/Modals/DashboardSidebar";
 import {
   useAuth,
 } from "../hooks/useAuth";

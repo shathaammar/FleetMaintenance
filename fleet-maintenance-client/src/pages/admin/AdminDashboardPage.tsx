@@ -26,7 +26,7 @@ import {
   Tooltip,
 } from "recharts";
 
-import { StatCard } from "../../components/dashboard/StatCard";
+import { StatCard } from "../../components/Modals/StatCard";
 import { ROUTES } from "../../constants/routes";
 import { dashboardService } from "../../services/dashboardService";
 import type { DashboardData, } from "../../types/dashboard";

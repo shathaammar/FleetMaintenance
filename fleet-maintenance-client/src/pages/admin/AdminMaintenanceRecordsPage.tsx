@@ -23,14 +23,14 @@ import {
   useState,
 } from "react";
 
-import { MaintenanceStatusBadge } from "../../components/dashboard/MaintenanceStatusBadge";
-import { MaintenanceRecordFormModal } from "../../components/dashboard/MaintenanceRecordFormModal";
+import { MaintenanceStatusBadge } from "../../components/Modals/MaintenanceStatusBadge";
+import { MaintenanceRecordFormModal } from "../../components/Modals/MaintenanceRecordFormModal";
 import { maintenanceRecordService } from "../../services/maintenanceRecordService";
 import { maintenanceTypeService } from "../../services/maintenanceTypeService";
 import { vehicleService } from "../../services/vehicleService";
-import { CompleteMaintenanceModal } from "../../components/dashboard/CompleteMaintenanceModal";
-import { MaintenanceRecordActionModal } from "../../components/dashboard/MaintenanceRecordActionModal";
-import { MaintenanceRecordDetailsModal } from "../../components/dashboard/MaintenanceRecordDetailsModal";
+import { CompleteMaintenanceModal } from "../../components/Modals/CompleteMaintenanceModal";
+import { MaintenanceRecordActionModal } from "../../components/Modals/MaintenanceRecordActionModal";
+import { MaintenanceRecordDetailsModal } from "../../components/Modals/MaintenanceRecordDetailsModal";
 import toast from "react-hot-toast";
 
 import type {

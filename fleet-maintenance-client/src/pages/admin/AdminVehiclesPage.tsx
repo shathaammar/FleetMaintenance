@@ -16,9 +16,9 @@ import {
   useState,
 } from "react";
 
-import { DeleteVehicleModal } from "../../components/dashboard/DeleteVehicleModal";
-import { VehicleFormModal } from "../../components/dashboard/VehicleFormModal";
-import { VehicleStatusBadge } from "../../components/dashboard/VehicleStatusBadge";
+import { DeleteVehicleModal } from "../../components/Modals/DeleteVehicleModal";
+import { VehicleFormModal } from "../../components/Modals/VehicleFormModal";
+import { VehicleStatusBadge } from "../../components/Modals/VehicleStatusBadge";
 import { VEHICLE_STATUS_OPTIONS, } from "../../constants/vehicleStatus";
 import { vehicleService } from "../../services/vehicleService";
 import type { PagedResult, } from "../../types/api";

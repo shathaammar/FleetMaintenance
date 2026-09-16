@@ -20,7 +20,7 @@ import {
   useState,
 } from "react";
 
-import { MaintenanceRequestStatusBadge } from "../../components/dashboard/MaintenanceRequestStatusBadge";
+import { MaintenanceRequestStatusBadge } from "../../components/Modals/MaintenanceRequestStatusBadge";
 
 import { maintenanceRequestService } from "../../services/maintenanceRequestService";
 
@@ -31,9 +31,9 @@ import type {
 } from "../../types/maintenanceRequest";
 
 import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
-import { MaintenanceRequestDetailsModal } from "../../components/dashboard/MaintenanceRequestDetailsModal";
-import { ApproveMaintenanceRequestModal } from "../../components/dashboard/ApproveMaintenanceRequestModal";
-import { RejectMaintenanceRequestModal } from "../../components/dashboard/RejectMaintenanceRequestModal";
+import { MaintenanceRequestDetailsModal } from "../../components/Modals/MaintenanceRequestDetailsModal";
+import { ApproveMaintenanceRequestModal } from "../../components/Modals/ApproveMaintenanceRequestModal";
+import { RejectMaintenanceRequestModal } from "../../components/Modals/RejectMaintenanceRequestModal";
 
 const PAGE_SIZE = 10;
 

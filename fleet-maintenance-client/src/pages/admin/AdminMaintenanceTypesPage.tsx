@@ -18,7 +18,7 @@ import {
 } from "react";
 import toast from "react-hot-toast";
 
-import { MaintenanceTypeFormModal, } from "../../components/dashboard/MaintenanceTypeFormModal";
+import { MaintenanceTypeFormModal, } from "../../components/Modals/MaintenanceTypeFormModal";
 import { ConfirmDeleteModal, } from "../../components/ui/ConfirmDeleteModal";
 import { maintenanceTypeService, } from "../../services/maintenanceTypeService";
 import type { MaintenanceType, } from "../../types/maintenanceType";

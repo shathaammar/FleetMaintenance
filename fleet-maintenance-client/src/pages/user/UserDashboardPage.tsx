@@ -19,7 +19,7 @@ import {
 
 import { Link } from "react-router-dom";
 
-import { MaintenanceRequestStatusBadge } from "../../components/dashboard/MaintenanceRequestStatusBadge";
+import { MaintenanceRequestStatusBadge } from "../../components/Modals/MaintenanceRequestStatusBadge";
 
 import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
 
